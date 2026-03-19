@@ -9,7 +9,7 @@ const PaymentStatusBadge = ({ paid }: PaymentStatusBadgeProps) => {
         paid ? "bg-green-100 text-green-700" : "bg-red-100 text-red-700"
       }`}
     >
-      {paid ? "Pagó" : "No pagó"}
+      {paid ? "Pagado" : "Pendiente de pago"}
     </span>
   );
 };

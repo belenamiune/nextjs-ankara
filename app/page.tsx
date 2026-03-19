@@ -1,9 +1,62 @@
-import { currentMonth, payments, players } from "@/lib/mock-data";
+"use client";
+
+import { useEffect, useState } from "react";
+import { createBrowserSupabaseClient } from "@/lib/supabase/client";
+import { adaptMonth, adaptPayment, adaptPlayer } from "@/lib/adapters";
+import { getMonthSummary } from "@/lib/get-month-summary";
 import MonthlySummary from "@/components/monthly-summary";
 import PaymentStatusBadge from "@/components/payment-status-badge";
-import { getMonthSummary } from "@/lib/get-month-summary";
+import { MonthConfig, Payment, Player } from "@/types";
+import { MonthRow, PaymentRow, PlayerRow } from "@/types/database";
 
 export default function Home() {
+  const [players, setPlayers] = useState<Player[]>([]);
+  const [currentMonth, setCurrentMonth] = useState<MonthConfig | null>(null);
+  const [payments, setPayments] = useState<Payment[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchData = async () => {
+      const supabase = createBrowserSupabaseClient();
+
+      const [playersResponse, monthResponse, paymentsResponse] =
+        await Promise.all([
+          supabase.from("players").select("*").order("id", { ascending: true }),
+          supabase.from("months").select("*").eq("is_current", true).single(),
+          supabase.from("payments").select("*").order("id", { ascending: true }),
+        ]);
+
+      if (playersResponse.error) {
+        console.error("Error trayendo players:", playersResponse.error);
+      }
+
+      if (monthResponse.error) {
+        console.error("Error trayendo month:", monthResponse.error);
+      }
+
+      if (paymentsResponse.error) {
+        console.error("Error trayendo payments:", paymentsResponse.error);
+      }
+
+      const adaptedPlayers = ((playersResponse.data ?? []) as PlayerRow[]).map(adaptPlayer);
+      const adaptedMonth = monthResponse.data
+        ? adaptMonth(monthResponse.data as MonthRow)
+        : null;
+      const adaptedPayments = ((paymentsResponse.data ?? []) as PaymentRow[]).map(adaptPayment);
+
+      setPlayers(adaptedPlayers);
+      setCurrentMonth(adaptedMonth);
+      setPayments(adaptedPayments);
+      setLoading(false);
+    };
+
+    fetchData();
+  }, []);
+
+  if (loading || !currentMonth) {
+    return <p>Cargando...</p>;
+  }
+
   const summary = getMonthSummary(players, payments, currentMonth.amount);
 
   return (

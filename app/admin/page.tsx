@@ -1,7 +1,72 @@
-import { currentMonth, payments, players } from "@/lib/mock-data";
+"use client";
+
+import { useEffect, useState } from "react";
 import AdminPaymentsPanel from "@/components/admin-payments-panel";
+import { createBrowserSupabaseClient } from "@/lib/supabase/client";
+import { adaptMonth, adaptPayment, adaptPlayer } from "@/lib/adapters";
+import { MonthConfig, Payment, Player } from "@/types";
+import { MonthRow, PaymentRow, PlayerRow } from "@/types/database";
 
 export default function AdminPage() {
+  const [players, setPlayers] = useState<Player[]>([]);
+  const [currentMonth, setCurrentMonth] = useState<MonthConfig | null>(null);
+  const [payments, setPayments] = useState<Payment[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchData = async () => {
+      const supabase = createBrowserSupabaseClient();
+
+      const [playersResponse, monthResponse, paymentsResponse] =
+        await Promise.all([
+          supabase.from("players").select("*").order("id", { ascending: true }),
+          supabase.from("months").select("*").eq("is_current", true).single(),
+          supabase.from("payments").select("*").order("id", { ascending: true }),
+        ]);
+
+      if (playersResponse.error) {
+        console.error("Error trayendo players:", playersResponse.error);
+      }
+
+      if (monthResponse.error) {
+        console.error("Error trayendo month:", monthResponse.error);
+      }
+
+      if (paymentsResponse.error) {
+        console.error("Error trayendo payments:", paymentsResponse.error);
+      }
+
+      const adaptedPlayers = ((playersResponse.data ?? []) as PlayerRow[]).map(
+        adaptPlayer
+      );
+
+      const adaptedMonth = monthResponse.data
+        ? adaptMonth(monthResponse.data as MonthRow)
+        : null;
+
+      const adaptedPayments = (
+        (paymentsResponse.data ?? []) as PaymentRow[]
+      ).map(adaptPayment);
+
+      setPlayers(adaptedPlayers);
+      setCurrentMonth(adaptedMonth);
+      setPayments(adaptedPayments);
+      setLoading(false);
+    };
+
+    fetchData();
+  }, []);
+
+  if (loading || !currentMonth) {
+    return (
+      <main className="min-h-screen bg-gray-50">
+        <div className="mx-auto flex w-full max-w-6xl flex-col gap-6 px-4 py-6 sm:px-6 lg:px-8">
+          <p className="text-sm text-gray-500">Cargando panel admin...</p>
+        </div>
+      </main>
+    );
+  }
+
   return (
     <main className="min-h-screen bg-gray-50">
       <div className="mx-auto flex w-full max-w-6xl flex-col gap-6 px-4 py-6 sm:px-6 lg:px-8">

@@ -7,6 +7,7 @@ import MonthlySummary from "@/components/monthly-summary";
 import { generateReminderMessage } from "@/lib/generate-reminder-message";
 import { getMonthSummary } from "@/lib/get-month-summary";
 import { MonthConfig, Payment, Player } from "@/types";
+import { createBrowserSupabaseClient } from "@/lib/supabase/client";
 
 type AdminPaymentsPanelProps = {
   players: Player[];
@@ -20,33 +21,73 @@ const AdminPaymentsPanel = ({
   month,
 }: AdminPaymentsPanelProps) => {
   const [paymentsState, setPaymentsState] = useState(initialPayments);
+  const [savingPlayerId, setSavingPlayerId] = useState<number | null>(null);
+  const [feedbackPlayerId, setFeedbackPlayerId] = useState<number | null>(null);
+  const [errorPlayerId, setErrorPlayerId] = useState<number | null>(null);
 
   const summary = getMonthSummary(players, paymentsState, month.amount);
   const reminderMessage = generateReminderMessage(players, paymentsState, month);
 
-  const handleTogglePayment = (playerId: string) => {
-    setPaymentsState((prevPayments) =>
-      prevPayments.map((payment) => {
-        if (payment.playerId !== playerId) return payment;
+ const handleTogglePayment = async (playerId: number) => {
+  const supabase = createBrowserSupabaseClient();
 
-        if (payment.paid) {
-          return {
-            ...payment,
-            paid: false,
-            paidAt: undefined,
-            amountPaid: undefined,
-          };
-        }
+  setSavingPlayerId(playerId);
+  setFeedbackPlayerId(null);
+  setErrorPlayerId(null);
 
-        return {
-          ...payment,
-          paid: true,
-          paidAt: new Date().toISOString().split("T")[0],
-          amountPaid: month.amount,
-        };
-      })
-    );
+  const currentPayment = paymentsState.find(
+    (payment) => payment.playerId === playerId && payment.monthId === month.id
+  );
+
+  if (!currentPayment) {
+    console.error("No se encontró el pago para esta jugadora");
+    setSavingPlayerId(null);
+    setErrorPlayerId(playerId);
+    return;
+  }
+
+  const nextPaid = !currentPayment.paid;
+
+  const payload = {
+    paid: nextPaid,
+    paid_at: nextPaid ? new Date().toISOString().split("T")[0] : null,
+    amount_paid: nextPaid ? month.amount : null,
   };
+
+  const { data, error } = await supabase
+    .from("payments")
+    .update(payload)
+    .eq("id", currentPayment.id)
+    .select()
+    .single();
+
+  if (error) {
+    console.error("Error actualizando pago:", error);
+    setSavingPlayerId(null);
+    setErrorPlayerId(playerId);
+    return;
+  }
+
+  setPaymentsState((prevPayments) =>
+    prevPayments.map((payment) =>
+      payment.id === currentPayment.id
+        ? {
+            ...payment,
+            paid: data.paid,
+            paidAt: data.paid_at ?? undefined,
+            amountPaid: data.amount_paid ?? undefined,
+          }
+        : payment
+    )
+  );
+
+  setSavingPlayerId(null);
+  setFeedbackPlayerId(playerId);
+
+  setTimeout(() => {
+    setFeedbackPlayerId((current) => (current === playerId ? null : current));
+  }, 2000);
+};
 
   return (
     <section className="flex flex-col gap-6">
@@ -122,19 +163,31 @@ const AdminPaymentsPanel = ({
                       />
                     </div>
                   </div>
+                  <div className="flex flex-col items-start gap-2">
+                      <button
+                        onClick={() => handleTogglePayment(player.id)}
+                        disabled={savingPlayerId === player.id}
+                        className={`inline-flex w-full items-center justify-center rounded-xl px-4 py-3 text-sm font-medium transition sm:w-auto ${
+                          payment?.paid
+                            ? "bg-gray-200 text-gray-800 hover:bg-gray-300"
+                            : "bg-black text-white hover:opacity-90"
+                        } disabled:cursor-not-allowed disabled:opacity-60`}
+                      >
+                        {savingPlayerId === player.id
+                          ? "Guardando..."
+                          : payment?.paid
+                          ? "Desmarcar pago"
+                          : "Marcar como pago"}
+                      </button>
 
-                  <div className="flex w-full shrink-0 lg:w-auto">
-                    <button
-                      onClick={() => handleTogglePayment(player.id)}
-                      className={`inline-flex w-full items-center justify-center rounded-xl px-4 py-3 text-sm font-medium transition sm:w-auto ${
-                        payment?.paid
-                          ? "bg-gray-200 text-gray-800 hover:bg-gray-300"
-                          : "bg-black text-white hover:opacity-90"
-                      }`}
-                    >
-                      {payment?.paid ? "Desmarcar pago" : "Marcar como pagó"}
-                    </button>
-                  </div>
+                      {feedbackPlayerId === player.id && (
+                        <p className="text-sm font-medium text-green-600">Guardado</p>
+                      )}
+
+                      {errorPlayerId === player.id && (
+                        <p className="text-sm font-medium text-red-600">Error al guardar</p>
+                      )}
+                    </div>
                 </div>
               </article>
             );

@@ -1,13 +1,13 @@
 export type Player = {
-  id: string;
+  id: number;
   name: string;
-  phone?: string;
-  email?: string;
+  phone?: string | null;
+  email?: string | null;
   active: boolean;
 };
 
 export type MonthConfig = {
-  id: string;
+  id: number;
   label: string;
   amount: number;
   dueDate: string;
@@ -15,9 +15,9 @@ export type MonthConfig = {
 };
 
 export type Payment = {
-  id: string;
-  playerId: string;
-  monthId: string;
+  id: number;
+  playerId: number;
+  monthId: number;
   paid: boolean;
   paidAt?: string;
   amountPaid?: number;
