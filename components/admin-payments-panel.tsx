@@ -43,6 +43,7 @@ const AdminPaymentsPanel = ({
   const [savingKey, setSavingKey] = useState<string | null>(null);
   const [feedbackKey, setFeedbackKey] = useState<string | null>(null);
   const [errorKey, setErrorKey] = useState<string | null>(null);
+  const [expandedPlayers, setExpandedPlayers] = useState<Record<number, boolean>>({});
 
   const profesorCharge = getChargeByCode(monthCharges, "profesor");
   const totalFields = getTotalFieldAmount(fieldEvents);
@@ -55,7 +56,6 @@ const AdminPaymentsPanel = ({
   const expectedFieldsTotal = totalFields * activePlayers.length;
   const expectedTotal = expectedProfesorTotal + expectedFieldsTotal;
 
-  const [expandedPlayers, setExpandedPlayers] = useState<Record<number, boolean>>({});
   const togglePlayerExpanded = (playerId: number) => {
     setExpandedPlayers((prev) => ({
       ...prev,
@@ -198,7 +198,7 @@ const AdminPaymentsPanel = ({
     }, 2000);
   };
 
-    const pendingPlayersLines = players
+  const pendingPlayersLines = players
     .filter((player) => player.active)
     .map((player) => {
       const profesorPayment = getPaymentForPlayerAndCharge(
@@ -237,56 +237,62 @@ const AdminPaymentsPanel = ({
     })
     .filter(Boolean);
 
-    const reminderMessage =
-      pendingPlayersLines.length > 0
-        ? `Hola chicas, les paso lo pendiente de ${month.label}:\n\n${pendingPlayersLines.join(
-            "\n"
-          )}\n\nPor favor, cuando vayan pagando avísenme así lo actualizo. Gracias 💙`
-        : `Todas las jugadoras están al día en ${month.label}. 💙`;
+  const reminderMessage =
+    pendingPlayersLines.length > 0
+      ? `Hola chicas, les paso lo pendiente de ${month.label}:\n\n${pendingPlayersLines.join(
+          "\n"
+        )}\n\nPor favor, cuando vayan pagando avísenme así lo actualizo. Gracias 💙`
+      : `Todas las jugadoras están al día en ${month.label}. 💙`;
 
   return (
     <section className="flex flex-col gap-6">
       <MonthlySummary month={month} totalFieldEvents={totalFieldEvents} />
 
       <section className="grid gap-4 sm:grid-cols-2 xl:grid-cols-6">
-      <StatCard
-        label="Zurdo"
-        value={`$${(profesorCharge?.amount ?? 0).toLocaleString("es-AR")}`}
-      />
-      <StatCard
-        label="Canchas del mes"
-        value={`$${totalFields.toLocaleString("es-AR")}`}
-      />
-      <StatCard
-        label="Total del mes"
-        value={`$${totalMonth.toLocaleString("es-AR")}`}
-      />
-      <StatCard
-        label="Total esperado"
-        value={`$${expectedTotal.toLocaleString("es-AR")}`}
-      />
-      <StatCard
-        label="Total recaudado"
-        value={`$${collectedTotal.toLocaleString("es-AR")}`}
-      />
-      <StatCard
-        label="Pendiente"
-        value={`$${pendingTotal.toLocaleString("es-AR")}`}
-      />
-    </section>
+        <StatCard
+          label="Zurdo"
+          value={`$${(profesorCharge?.amount ?? 0).toLocaleString("es-AR")}`}
+          variant="default"
+        />
+        <StatCard
+          label="Canchas del mes"
+          value={`$${totalFields.toLocaleString("es-AR")}`}
+          variant="mint"
+        />
+        <StatCard
+          label="Total del mes"
+          value={`$${totalMonth.toLocaleString("es-AR")}`}
+          variant="blue"
+        />
+        <StatCard
+          label="Total esperado"
+          value={`$${expectedTotal.toLocaleString("es-AR")}`}
+          variant="default"
+        />
+        <StatCard
+          label="Total recaudado"
+          value={`$${collectedTotal.toLocaleString("es-AR")}`}
+          variant="success"
+        />
+        <StatCard
+          label="Pendiente"
+          value={`$${pendingTotal.toLocaleString("es-AR")}`}
+          variant="warning"
+        />
+      </section>
 
-      <section className="rounded-2xl border border-gray-200 bg-white p-4 shadow-sm sm:p-5">
+      <section className="rounded-3xl border border-[var(--border)] bg-[var(--card)] p-4 shadow-sm sm:p-5">
         <div className="mb-4 flex flex-col gap-1">
-          <h2 className="text-lg font-semibold text-gray-900 sm:text-xl">
+          <h2 className="text-lg font-semibold text-[var(--foreground)] sm:text-xl">
             Jugadoras
           </h2>
-          <p className="text-sm text-gray-500">
+          <p className="text-sm text-[var(--muted)]">
             Cuota y detalle de canchas por jugadora.
           </p>
         </div>
 
         <div className="grid gap-4">
-          {players.map((player) => {
+          {players.map((player, index) => {
             const profesorPayment = getPaymentForPlayerAndCharge(
               paymentsState,
               player.id,
@@ -300,25 +306,33 @@ const AdminPaymentsPanel = ({
             );
 
             const isExpanded = !!expandedPlayers[player.id];
+
+            const playerCardVariants = [
+              "bg-[var(--card)]",
+              "bg-[var(--surface-soft)]",
+              "bg-[var(--surface-mint)]",
+            ];
+
             return (
-             <article
+              <article
                 key={player.id}
-                className="rounded-2xl border border-gray-200 bg-gray-50 p-4"
+                className={`rounded-3xl border border-[var(--border)] p-4 shadow-sm transition-all duration-200 hover:-translate-y-0.5 ${playerCardVariants[index % playerCardVariants.length]}`}
               >
                 <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                   <div>
-                    <h3 className="text-base font-semibold text-gray-900 sm:text-lg">
+                    <h3 className="text-base font-semibold text-[var(--foreground)] sm:text-lg">
                       {player.name}
                     </h3>
-                    <p className="text-sm text-gray-500">
-                      Zurdo: {profesorPayment?.paid ? "Pago" : "Pendiente"} · Canchas: {paidFieldsCount}/{totalFieldEvents}
+                    <p className="text-sm text-[var(--muted)]">
+                      Zurdo: {profesorPayment?.paid ? "Pago" : "Pendiente"} · Canchas:{" "}
+                      {paidFieldsCount}/{totalFieldEvents}
                     </p>
                   </div>
 
                   <button
                     type="button"
                     onClick={() => togglePlayerExpanded(player.id)}
-                    className="inline-flex items-center justify-center rounded-xl border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 transition hover:bg-gray-100"
+                    className="inline-flex items-center justify-center rounded-xl border border-[var(--border)] bg-[var(--card)] px-4 py-2 text-sm font-medium text-[var(--foreground)] transition hover:border-[var(--ankara-mint)] hover:bg-[var(--surface-mint)]"
                   >
                     {isExpanded ? "Ocultar detalle" : "Ver detalle"}
                   </button>
@@ -326,9 +340,9 @@ const AdminPaymentsPanel = ({
 
                 {isExpanded && (
                   <div className="mt-4 grid gap-4 xl:grid-cols-2">
-                    <div className="rounded-2xl border border-gray-200 bg-white p-4">
+                    <div className="rounded-2xl border border-[var(--border)] bg-[var(--card)] p-4">
                       <div className="flex items-center justify-between gap-3">
-                        <span className="text-sm font-semibold text-gray-700">
+                        <span className="text-sm font-semibold text-[var(--foreground)]">
                           Zurdo
                         </span>
                         <PaymentStatusBadge paid={profesorPayment?.paid ?? false} />
@@ -348,12 +362,12 @@ const AdminPaymentsPanel = ({
                       </div>
                     </div>
 
-                    <div className="rounded-2xl border border-gray-200 bg-white p-4">
+                    <div className="rounded-2xl border border-[var(--border)] bg-[var(--card)] p-4">
                       <div className="flex items-center justify-between gap-3">
-                        <span className="text-sm font-semibold text-gray-700">
+                        <span className="text-sm font-semibold text-[var(--foreground)]">
                           Canchas
                         </span>
-                        <span className="rounded-full bg-gray-200 px-3 py-1 text-xs font-semibold text-gray-700">
+                        <span className="rounded-full bg-[var(--surface-blue)] px-3 py-1 text-xs font-semibold text-[var(--ankara-blue)] dark:text-[var(--ankara-mint)]">
                           {paidFieldsCount}/{totalFieldEvents} pagadas
                         </span>
                       </div>
@@ -371,15 +385,15 @@ const AdminPaymentsPanel = ({
                           return (
                             <div
                               key={event.id}
-                              className="rounded-xl border border-gray-200 bg-gray-50 p-3"
+                              className="rounded-2xl border border-[var(--border)] bg-[var(--surface-soft)] p-3"
                             >
                               <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                                 <div>
-                                  <p className="text-sm font-semibold text-gray-900">
+                                  <p className="text-sm font-semibold text-[var(--foreground)]">
                                     {event.label}
                                   </p>
-                                  <p className="text-xs text-gray-500">
-                                    {event.eventDate} - ${event.amount.toLocaleString("es-AR")}
+                                  <p className="text-xs text-[var(--muted)]">
+                                    {event.eventDate} · ${event.amount.toLocaleString("es-AR")}
                                   </p>
                                 </div>
 
@@ -422,13 +436,29 @@ const AdminPaymentsPanel = ({
 type StatCardProps = {
   label: string;
   value: string;
+  variant?: "default" | "mint" | "blue" | "success" | "warning";
 };
 
-const StatCard = ({ label, value }: StatCardProps) => {
+const StatCard = ({ label, value, variant = "default" }: StatCardProps) => {
+  const variants = {
+    default:
+      "bg-[var(--card)] text-[var(--foreground)]",
+    mint:
+      "bg-[var(--surface-mint)] text-[var(--foreground)]",
+    blue:
+      "bg-[var(--surface-blue)] text-[var(--foreground)]",
+    success:
+      "bg-[rgba(34,197,94,0.10)] text-[var(--foreground)]",
+    warning:
+      "bg-[rgba(245,158,11,0.12)] text-[var(--foreground)]",
+  };
+
   return (
-    <article className="rounded-2xl border border-gray-200 bg-white p-4 shadow-sm sm:p-5">
-      <p className="text-sm font-medium text-gray-500">{label}</p>
-      <p className="mt-2 text-2xl font-bold tracking-tight text-gray-900 sm:text-3xl">
+    <article
+      className={`rounded-3xl border border-[var(--border)] p-4 shadow-sm sm:p-5 ${variants[variant]}`}
+    >
+      <p className="text-sm font-medium text-[var(--muted)]">{label}</p>
+      <p className="mt-2 text-2xl font-bold tracking-tight text-[var(--ankara-blue)] dark:text-white sm:text-3xl">
         {value}
       </p>
     </article>
@@ -459,11 +489,11 @@ const ActionButton = ({
         disabled={saving}
         className={`inline-flex w-full items-center justify-center rounded-xl px-4 py-3 text-sm font-medium transition sm:w-auto ${
           active
-            ? "bg-gray-200 text-gray-800 hover:bg-gray-300"
-            : "bg-black text-white hover:opacity-90"
+            ? "border border-[var(--border)] bg-[var(--surface-soft)] text-[var(--foreground)] hover:bg-[var(--surface-blue)]"
+            : "bg-[var(--ankara-blue)] text-white hover:opacity-90 dark:bg-[var(--ankara-mint)] dark:text-[var(--ankara-blue)]"
         } disabled:cursor-not-allowed disabled:opacity-60`}
       >
-        {saving ? "Guardando..." : label}
+        {saving ? "Guardando" : label}
       </button>
 
       {saved && <p className="text-sm font-medium text-green-600">Guardado</p>}

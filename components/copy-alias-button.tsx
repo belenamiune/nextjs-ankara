@@ -24,8 +24,8 @@ const CopyAliasButton = ({ alias }: CopyAliasButtonProps) => {
   };
 
   return (
-    <div className="flex items-center gap-2">
-      <span className="rounded-lg bg-gray-100 px-3 py-2 text-sm font-medium text-gray-800">
+    <div className="flex flex-wrap items-center gap-2">
+      <span className="rounded-xl border border-[var(--border)] bg-[var(--surface-soft)] px-3 py-2 text-sm font-medium text-[var(--foreground)] shadow-sm">
         {alias}
       </span>
 
@@ -34,7 +34,11 @@ const CopyAliasButton = ({ alias }: CopyAliasButtonProps) => {
         onClick={handleCopy}
         aria-label="Copiar alias"
         title="Copiar alias"
-        className="inline-flex h-10 w-10 items-center justify-center rounded-lg border border-gray-300 bg-white text-gray-700 transition hover:bg-gray-100"
+        className={`inline-flex h-10 w-10 items-center justify-center rounded-xl border transition ${
+          copied
+            ? "border-[var(--ankara-mint)] bg-[var(--surface-mint)] text-[var(--ankara-blue)]"
+            : "border-[var(--border)] bg-[var(--card)] text-[var(--foreground)] hover:border-[var(--ankara-mint)] hover:bg-[var(--surface-mint)]"
+        }`}
       >
         {copied ? <Check size={18} /> : <Copy size={18} />}
       </button>
