@@ -56,7 +56,7 @@ export default function AdminPage() {
           .from("month_charges")
           .select("*, charge_concepts(*)")
           .order("id", { ascending: true }),
-        supabase.from("payments_v2").select("*").order("id", { ascending: true }),
+        supabase.from("payments").select("*").order("id", { ascending: true }),
         supabase.from("field_events").select("*").order("event_date", { ascending: true }),
         supabase.from("field_payments").select("*").order("id", { ascending: true }),
       ]);

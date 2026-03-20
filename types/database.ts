@@ -10,13 +10,10 @@ export type PlayerRow = {
 export type MonthRow = {
   id: number;
   label: string;
-  amount: number;
   due_date: string;
   alias: string;
   is_current: boolean;
   created_at: string;
-  total_payment_link: string | null;
-  field_total_payment_link: string | null;
 };
 
 export type ChargeConceptRow = {

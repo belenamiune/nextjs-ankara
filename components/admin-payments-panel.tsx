@@ -49,6 +49,33 @@ const AdminPaymentsPanel = ({
   const totalMonth = (profesorCharge?.amount ?? 0) + totalFields;
   const totalFieldEvents = getTotalFieldEventsCount(fieldEvents);
 
+  const activePlayers = players.filter((player) => player.active);
+
+  const expectedProfesorTotal = (profesorCharge?.amount ?? 0) * activePlayers.length;
+  const expectedFieldsTotal = totalFields * activePlayers.length;
+  const expectedTotal = expectedProfesorTotal + expectedFieldsTotal;
+
+  const [expandedPlayers, setExpandedPlayers] = useState<Record<number, boolean>>({});
+  const togglePlayerExpanded = (playerId: number) => {
+    setExpandedPlayers((prev) => ({
+      ...prev,
+      [playerId]: !prev[playerId],
+    }));
+  };
+
+  const collectedProfesorTotal = paymentsState.reduce((total, payment) => {
+    if (!payment.paid) return total;
+    return total + (payment.amountPaid ?? 0);
+  }, 0);
+
+  const collectedFieldsTotal = fieldPaymentsState.reduce((total, payment) => {
+    if (!payment.paid) return total;
+    return total + (payment.amountPaid ?? 0);
+  }, 0);
+
+  const collectedTotal = collectedProfesorTotal + collectedFieldsTotal;
+  const pendingTotal = expectedTotal - collectedTotal;
+
   const handleToggleProfesor = async (playerId: number, monthChargeId: number) => {
     const supabase = createBrowserSupabaseClient();
     const key = `profesor-${playerId}-${monthChargeId}`;
@@ -71,7 +98,7 @@ const AdminPaymentsPanel = ({
     const nextPaid = !currentPayment.paid;
 
     const { data, error } = await supabase
-      .from("payments_v2")
+      .from("payments")
       .update({
         paid: nextPaid,
         paid_at: nextPaid ? new Date().toISOString().split("T")[0] : null,
@@ -171,7 +198,7 @@ const AdminPaymentsPanel = ({
     }, 2000);
   };
 
-  const reminderMessage = players
+    const pendingPlayersLines = players
     .filter((player) => player.active)
     .map((player) => {
       const profesorPayment = getPaymentForPlayerAndCharge(
@@ -190,35 +217,64 @@ const AdminPaymentsPanel = ({
       });
 
       const parts = [];
-      if (!profesorPayment?.paid) parts.push("Profesor");
-      if (pendingFields.length > 0) {
-        parts.push(`Canchas (${pendingFields.length}/${totalFieldEvents} pendientes)`);
+
+      if (!profesorPayment?.paid) {
+        parts.push("profesor pendiente");
       }
 
-      return parts.length > 0 ? `${player.name}: ${parts.join(", ")}` : null;
+      if (pendingFields.length > 0) {
+        const label =
+          pendingFields.length === 1
+            ? "1 cancha pendiente"
+            : `${pendingFields.length} canchas pendientes`;
+
+        parts.push(label);
+      }
+
+      if (parts.length === 0) return null;
+
+      return `- ${player.name}: ${parts.join(" y ")}`;
     })
-    .filter(Boolean)
-    .join("\n");
+    .filter(Boolean);
+
+    const reminderMessage =
+      pendingPlayersLines.length > 0
+        ? `Hola chicas, les paso lo pendiente de ${month.label}:\n\n${pendingPlayersLines.join(
+            "\n"
+          )}\n\nPor favor, cuando vayan pagando avísenme así lo actualizo. Gracias 💛`
+        : `Todas las jugadoras están al día en ${month.label}. 💛`;
 
   return (
     <section className="flex flex-col gap-6">
       <MonthlySummary month={month} />
 
-      <section className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-        <StatCard
-          label="Profesor"
-          value={`$${(profesorCharge?.amount ?? 0).toLocaleString("es-AR")}`}
-        />
-        <StatCard
-          label="Canchas del mes"
-          value={`$${totalFields.toLocaleString("es-AR")}`}
-        />
-        <StatCard
-          label="Total del mes"
-          value={`$${totalMonth.toLocaleString("es-AR")}`}
-        />
-        <StatCard label="Domingos" value={String(totalFieldEvents)} />
-      </section>
+      <section className="grid gap-4 sm:grid-cols-2 xl:grid-cols-6">
+      <StatCard
+        label="Profesor"
+        value={`$${(profesorCharge?.amount ?? 0).toLocaleString("es-AR")}`}
+      />
+      <StatCard
+        label="Canchas del mes"
+        value={`$${totalFields.toLocaleString("es-AR")}`}
+      />
+      <StatCard
+        label="Total del mes"
+        value={`$${totalMonth.toLocaleString("es-AR")}`}
+      />
+      <StatCard label="Domingos" value={String(totalFieldEvents)} />
+      <StatCard
+        label="Total esperado"
+        value={`$${expectedTotal.toLocaleString("es-AR")}`}
+      />
+      <StatCard
+        label="Total recaudado"
+        value={`$${collectedTotal.toLocaleString("es-AR")}`}
+      />
+      <StatCard
+        label="Pendiente"
+        value={`$${pendingTotal.toLocaleString("es-AR")}`}
+      />
+    </section>
 
       <section className="rounded-2xl border border-gray-200 bg-white p-4 shadow-sm sm:p-5">
         <div className="mb-4 flex flex-col gap-1">
@@ -244,101 +300,110 @@ const AdminPaymentsPanel = ({
               fieldEvents
             );
 
+            const isExpanded = !!expandedPlayers[player.id];
             return (
-              <article
+             <article
                 key={player.id}
                 className="rounded-2xl border border-gray-200 bg-gray-50 p-4"
               >
-                <h3 className="text-base font-semibold text-gray-900 sm:text-lg">
-                  {player.name}
-                </h3>
-
-                <div className="mt-4 grid gap-4 xl:grid-cols-2">
-                  <div className="rounded-2xl border border-gray-200 bg-white p-4">
-                    <div className="flex items-center justify-between gap-3">
-                      <span className="text-sm font-semibold text-gray-700">
-                        Profesor
-                      </span>
-                      <PaymentStatusBadge paid={profesorPayment?.paid ?? false} />
-                    </div>
-
-                    <div className="mt-4">
-                      <ActionButton
-                        label={
-                          profesorPayment?.paid
-                            ? "Desmarcar pago"
-                            : "Marcar como pago"
-                        }
-                        saving={savingKey === `profesor-${player.id}-${profesorCharge?.id}`}
-                        saved={feedbackKey === `profesor-${player.id}-${profesorCharge?.id}`}
-                        error={errorKey === `profesor-${player.id}-${profesorCharge?.id}`}
-                        onClick={() =>
-                          profesorCharge &&
-                          handleToggleProfesor(player.id, profesorCharge.id)
-                        }
-                        active={!!profesorPayment?.paid}
-                      />
-                    </div>
+                <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                  <div>
+                    <h3 className="text-base font-semibold text-gray-900 sm:text-lg">
+                      {player.name}
+                    </h3>
+                    <p className="text-sm text-gray-500">
+                      Profesor: {profesorPayment?.paid ? "Pago" : "Pendiente"} · Canchas: {paidFieldsCount}/{totalFieldEvents}
+                    </p>
                   </div>
 
-                  <div className="rounded-2xl border border-gray-200 bg-white p-4">
-                    <div className="flex items-center justify-between gap-3">
-                      <span className="text-sm font-semibold text-gray-700">
-                        Canchas
-                      </span>
-                      <span className="rounded-full bg-gray-200 px-3 py-1 text-xs font-semibold text-gray-700">
-                        {paidFieldsCount}/{totalFieldEvents} pagadas
-                      </span>
+                  <button
+                    type="button"
+                    onClick={() => togglePlayerExpanded(player.id)}
+                    className="inline-flex items-center justify-center rounded-xl border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 transition hover:bg-gray-100"
+                  >
+                    {isExpanded ? "Ocultar detalle" : "Ver detalle"}
+                  </button>
+                </div>
+
+                {isExpanded && (
+                  <div className="mt-4 grid gap-4 xl:grid-cols-2">
+                    <div className="rounded-2xl border border-gray-200 bg-white p-4">
+                      <div className="flex items-center justify-between gap-3">
+                        <span className="text-sm font-semibold text-gray-700">
+                          Profesor
+                        </span>
+                        <PaymentStatusBadge paid={profesorPayment?.paid ?? false} />
+                      </div>
+
+                      <div className="mt-4">
+                        <ActionButton
+                          label={profesorPayment?.paid ? "Desmarcar pago" : "Marcar como pago"}
+                          saving={savingKey === `profesor-${player.id}-${profesorCharge?.id}`}
+                          saved={feedbackKey === `profesor-${player.id}-${profesorCharge?.id}`}
+                          error={errorKey === `profesor-${player.id}-${profesorCharge?.id}`}
+                          onClick={() =>
+                            profesorCharge && handleToggleProfesor(player.id, profesorCharge.id)
+                          }
+                          active={!!profesorPayment?.paid}
+                        />
+                      </div>
                     </div>
 
-                    <div className="mt-4 grid gap-3">
-                      {fieldEvents.map((event) => {
-                        const payment = getFieldPaymentForPlayer(
-                          fieldPaymentsState,
-                          player.id,
-                          event.id
-                        );
+                    <div className="rounded-2xl border border-gray-200 bg-white p-4">
+                      <div className="flex items-center justify-between gap-3">
+                        <span className="text-sm font-semibold text-gray-700">
+                          Canchas
+                        </span>
+                        <span className="rounded-full bg-gray-200 px-3 py-1 text-xs font-semibold text-gray-700">
+                          {paidFieldsCount}/{totalFieldEvents} pagadas
+                        </span>
+                      </div>
 
-                        const actionKey = `cancha-${player.id}-${event.id}`;
+                      <div className="mt-4 grid gap-3">
+                        {fieldEvents.map((event) => {
+                          const payment = getFieldPaymentForPlayer(
+                            fieldPaymentsState,
+                            player.id,
+                            event.id
+                          );
 
-                        return (
-                          <div
-                            key={event.id}
-                            className="rounded-xl border border-gray-200 bg-gray-50 p-3"
-                          >
-                            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-                              <div>
-                                <p className="text-sm font-semibold text-gray-900">
-                                  {event.label}
-                                </p>
-                                <p className="text-xs text-gray-500">
-                                  {event.eventDate} - ${event.amount.toLocaleString("es-AR")}
-                                </p>
+                          const actionKey = `cancha-${player.id}-${event.id}`;
+
+                          return (
+                            <div
+                              key={event.id}
+                              className="rounded-xl border border-gray-200 bg-gray-50 p-3"
+                            >
+                              <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                                <div>
+                                  <p className="text-sm font-semibold text-gray-900">
+                                    {event.label}
+                                  </p>
+                                  <p className="text-xs text-gray-500">
+                                    {event.eventDate} - ${event.amount.toLocaleString("es-AR")}
+                                  </p>
+                                </div>
+
+                                <PaymentStatusBadge paid={payment?.paid ?? false} />
                               </div>
 
-                              <PaymentStatusBadge paid={payment?.paid ?? false} />
+                              <div className="mt-3">
+                                <ActionButton
+                                  label={payment?.paid ? "Desmarcar pago" : "Marcar como pago"}
+                                  saving={savingKey === actionKey}
+                                  saved={feedbackKey === actionKey}
+                                  error={errorKey === actionKey}
+                                  onClick={() => handleToggleField(player.id, event.id)}
+                                  active={!!payment?.paid}
+                                />
+                              </div>
                             </div>
-
-                            <div className="mt-3">
-                              <ActionButton
-                                label={
-                                  payment?.paid
-                                    ? "Desmarcar pago"
-                                    : "Marcar como pago"
-                                }
-                                saving={savingKey === actionKey}
-                                saved={feedbackKey === actionKey}
-                                error={errorKey === actionKey}
-                                onClick={() => handleToggleField(player.id, event.id)}
-                                active={!!payment?.paid}
-                              />
-                            </div>
-                          </div>
-                        );
-                      })}
+                          );
+                        })}
+                      </div>
                     </div>
                   </div>
-                </div>
+                )}
               </article>
             );
           })}

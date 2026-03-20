@@ -20,7 +20,8 @@ import {
   getTotalFieldEventsCount,
 } from "@/lib/field-helpers";
 import PaymentStatusBadge from "@/components/payment-status-badge";
-import FullScreenLoader  from "@/components/full-screen-loader";
+import FullScreenLoader from "@/components/full-screen-loader";
+import FieldSummaryCard from "@/components/field-summary-card";
 import {
   FieldEvent,
   FieldPayment,
@@ -37,6 +38,7 @@ import {
   PaymentRow,
   PlayerRow,
 } from "@/types/database";
+import CopyAliasButton from "@/components/copy-alias-button";
 
 export default function Home() {
   const [players, setPlayers] = useState<Player[]>([]);
@@ -65,7 +67,7 @@ export default function Home() {
           .from("month_charges")
           .select("*, charge_concepts(*)")
           .order("id", { ascending: true }),
-        supabase.from("payments_v2").select("*").order("id", { ascending: true }),
+        supabase.from("payments").select("*").order("id", { ascending: true }),
         supabase
           .from("field_events")
           .select("*")
@@ -90,9 +92,7 @@ export default function Home() {
       setMonthCharges(
         ((chargesResponse.data ?? []) as MonthChargeRow[]).map(adaptMonthCharge)
       );
-      setPayments(
-        ((paymentsResponse.data ?? []) as PaymentRow[]).map(adaptPayment)
-      );
+      setPayments(((paymentsResponse.data ?? []) as PaymentRow[]).map(adaptPayment));
       setFieldEvents(
         ((fieldEventsResponse.data ?? []) as FieldEventRow[]).map(adaptFieldEvent)
       );
@@ -108,9 +108,9 @@ export default function Home() {
     fetchData();
   }, []);
 
-    if (loading || !currentMonth) {
-      return <FullScreenLoader text="Cargando" />;
-    }
+  if (loading || !currentMonth) {
+    return <FullScreenLoader text="Cargando" />;
+  }
 
   const profesorCharge = getChargeByCode(monthCharges, "profesor");
   const totalFields = getTotalFieldAmount(fieldEvents);
@@ -140,21 +140,16 @@ export default function Home() {
             amount={profesorCharge?.amount ?? 0}
             dueDate={currentMonth.dueDate}
             alias={profesorCharge?.alias ?? currentMonth.alias}
-            paymentLink={profesorCharge?.paymentLink}
           />
 
           <FieldSummaryCard
             totalAmount={totalFields}
-            dueDate={currentMonth.dueDate}
             alias={currentMonth.alias}
-            totalPaymentLink={currentMonth.fieldTotalPaymentLink}
             fieldEvents={fieldEvents}
           />
 
           <TotalCard
             total={totalMonth}
-            dueDate={currentMonth.dueDate}
-            paymentLink={currentMonth.totalPaymentLink}
           />
         </section>
 
@@ -222,14 +217,12 @@ type ProfesorCardProps = {
   amount: number;
   dueDate: string;
   alias?: string;
-  paymentLink?: string;
 };
 
 const ProfesorCard = ({
   amount,
   dueDate,
   alias,
-  paymentLink,
 }: ProfesorCardProps) => {
   return (
     <article className="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm">
@@ -240,87 +233,10 @@ const ProfesorCard = ({
 
       <div className="mt-4 space-y-2 text-sm text-gray-600">
         <p>Vence: {dueDate}</p>
-        <p>Alias: {alias ?? "-"}</p>
-      </div>
-
-      {paymentLink && (
-        <a
-          href={paymentLink}
-          target="_blank"
-          rel="noreferrer"
-          className="mt-4 inline-flex rounded-xl bg-black px-4 py-2 text-sm font-medium text-white transition hover:opacity-90"
-        >
-          Pagar profesor
-        </a>
-      )}
-    </article>
-  );
-};
-
-type FieldSummaryCardProps = {
-  totalAmount: number;
-  dueDate: string;
-  alias?: string;
-  totalPaymentLink?: string;
-  fieldEvents: FieldEvent[];
-};
-
-const FieldSummaryCard = ({
-  totalAmount,
-  dueDate,
-  alias,
-  totalPaymentLink,
-  fieldEvents,
-}: FieldSummaryCardProps) => {
-  return (
-    <article className="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm">
-      <p className="text-sm font-medium text-gray-500">Canchas del mes</p>
-      <p className="mt-2 text-3xl font-bold tracking-tight text-gray-900">
-        ${totalAmount.toLocaleString("es-AR")}
-      </p>
-
-      <div className="mt-4 space-y-2 text-sm text-gray-600">
-        <p>Vence: {dueDate}</p>
-        <p>Alias: {alias ?? "-"}</p>
-        <p>{fieldEvents.length} domingos en el mes</p>
-      </div>
-
-      {totalPaymentLink && (
-        <a
-          href={totalPaymentLink}
-          target="_blank"
-          rel="noreferrer"
-          className="mt-4 inline-flex rounded-xl bg-black px-4 py-2 text-sm font-medium text-white transition hover:opacity-90"
-        >
-          Pagar total canchas
-        </a>
-      )}
-
-      <div className="mt-5 space-y-3 border-t border-gray-200 pt-4">
-        {fieldEvents.map((event) => (
-          <div
-            key={event.id}
-            className="flex flex-col gap-3 rounded-xl border border-gray-200 bg-gray-50 p-3 sm:flex-row sm:items-center sm:justify-between"
-          >
-            <div>
-              <p className="text-sm font-semibold text-gray-900">{event.label}</p>
-              <p className="text-xs text-gray-500">
-                {event.eventDate} · ${event.amount.toLocaleString("es-AR")}
-              </p>
-            </div>
-
-            {event.paymentLink && (
-              <a
-                href={event.paymentLink}
-                target="_blank"
-                rel="noreferrer"
-                className="inline-flex items-center justify-center rounded-lg bg-gray-900 px-3 py-2 text-sm font-medium text-white transition hover:opacity-90"
-              >
-                Pagar individual
-              </a>
-            )}
-          </div>
-        ))}
+        <div>
+          <p className="mb-2">Alias</p>
+          {alias ? <CopyAliasButton alias={alias} /> : <p>-</p>}
+        </div>
       </div>
     </article>
   );
@@ -328,11 +244,9 @@ const FieldSummaryCard = ({
 
 type TotalCardProps = {
   total: number;
-  dueDate: string;
-  paymentLink?: string;
 };
 
-const TotalCard = ({ total, dueDate, paymentLink }: TotalCardProps) => {
+const TotalCard = ({ total }: TotalCardProps) => {
   return (
     <article className="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm">
       <p className="text-sm font-medium text-gray-500">Total del mes</p>
@@ -340,20 +254,6 @@ const TotalCard = ({ total, dueDate, paymentLink }: TotalCardProps) => {
         ${total.toLocaleString("es-AR")}
       </p>
 
-      <div className="mt-4 space-y-2 text-sm text-gray-600">
-        <p>Vence: {dueDate}</p>
-      </div>
-
-      {paymentLink && (
-        <a
-          href={paymentLink}
-          target="_blank"
-          rel="noreferrer"
-          className="mt-4 inline-flex rounded-xl bg-black px-4 py-2 text-sm font-medium text-white transition hover:opacity-90"
-        >
-          Pagar total del mes
-        </a>
-      )}
     </article>
   );
 };

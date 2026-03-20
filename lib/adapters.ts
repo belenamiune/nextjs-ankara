@@ -30,9 +30,7 @@ export function adaptMonth(row: MonthRow): MonthConfig {
     id: row.id,
     label: row.label,
     dueDate: row.due_date,
-    alias: row.alias,
-    totalPaymentLink: row.total_payment_link ?? undefined,
-    fieldTotalPaymentLink: row.field_total_payment_link ?? undefined,
+    alias: row.alias
   };
 }
 

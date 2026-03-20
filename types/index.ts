@@ -11,8 +11,6 @@ export type MonthConfig = {
   label: string;
   dueDate: string;
   alias: string;
-  totalPaymentLink?: string;
-  fieldTotalPaymentLink?: string;
 };
 
 export type ChargeConcept = {
@@ -32,18 +30,6 @@ export type MonthCharge = {
   alias?: string;
   paymentLink?: string;
   active: boolean;
-};
-
-export type MonthRow = {
-  id: number;
-  label: string;
-  amount: number;
-  due_date: string;
-  alias: string;
-  is_current: boolean;
-  total_payment_link: string | null;
-  field_total_payment_link: string | null;
-  created_at: string;
 };
 
 export type Payment = {
