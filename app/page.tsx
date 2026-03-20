@@ -182,7 +182,8 @@ export default function Home() {
           </div>
         </header>
 
-        <section className="grid gap-4 xl:grid-cols-3">
+        <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+           <CurrentMonthCard label={currentMonth.label} />
           <ProfesorCard
             amount={profesorCharge?.amount ?? 0}
             dueDate={currentMonth.dueDate}
@@ -209,54 +210,48 @@ export default function Home() {
           </div>
 
           <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
-            {players.map((player, index) => {
-              const profesorPayment = getPaymentForPlayerAndCharge(
-                payments,
-                player.id,
-                profesorCharge?.id
-              );
+            {players.map((player) => {
+            const profesorPayment = getPaymentForPlayerAndCharge(
+              payments,
+              player.id,
+              profesorCharge?.id
+            );
 
-              const paidFieldsCount = getPaidFieldEventsCountForPlayer(
-                fieldPayments,
-                player.id,
-                fieldEvents
-              );
+            const paidFieldsCount = getPaidFieldEventsCountForPlayer(
+              fieldPayments,
+              player.id,
+              fieldEvents
+            );
 
-              const cardVariants = [
-                "bg-[var(--card)]",
-                "bg-[var(--surface-soft)]",
-                "bg-[var(--surface-mint)]",
-              ];
+            return (
+              <article
+                key={player.id}
+                className="rounded-3xl border border-[var(--border)] bg-[var(--card)] p-4 shadow-sm transition-transform duration-200 hover:-translate-y-0.5"
+              >
+                <h3 className="text-base font-semibold text-[var(--foreground)]">
+                  {player.name}
+                </h3>
 
-              return (
-                <article
-                  key={player.id}
-                  className={`rounded-3xl border border-[var(--border)] p-4 shadow-sm transition-transform duration-200 hover:-translate-y-0.5 ${cardVariants[index % cardVariants.length]}`}
-                >
-                  <h3 className="text-base font-semibold text-[var(--foreground)]">
-                    {player.name}
-                  </h3>
-
-                  <div className="mt-4 space-y-3">
-                    <div className="flex items-center justify-between gap-3">
-                      <span className="text-sm font-medium text-[var(--muted)]">
-                        Zurdo
-                      </span>
-                      <PaymentStatusBadge paid={profesorPayment?.paid ?? false} />
-                    </div>
-
-                    <div className="flex items-center justify-between gap-3">
-                      <span className="text-sm font-medium text-[var(--muted)]">
-                        Canchas
-                      </span>
-                      <span className="rounded-full bg-[var(--surface-blue)] px-3 py-1 text-xs font-semibold text-[var(--ankara-blue)] dark:text-[var(--ankara-mint)]">
-                        {paidFieldsCount}/{totalFieldEvents} pagadas
-                      </span>
-                    </div>
+                <div className="mt-4 space-y-3">
+                  <div className="flex items-center justify-between gap-3">
+                    <span className="text-sm font-medium text-[var(--muted)]">
+                      Zurdo
+                    </span>
+                    <PaymentStatusBadge paid={profesorPayment?.paid ?? false} />
                   </div>
-                </article>
-              );
-            })}
+
+                  <div className="flex items-center justify-between gap-3">
+                    <span className="text-sm font-medium text-[var(--muted)]">
+                      Canchas
+                    </span>
+                    <span className="rounded-full bg-[var(--surface-blue)] px-3 py-1 text-xs font-semibold text-[var(--ankara-blue)] dark:text-[var(--ankara-mint)]">
+                      {paidFieldsCount}/{totalFieldEvents} pagadas
+                    </span>
+                  </div>
+                </div>
+              </article>
+            );
+          })}
           </div>
         </section>
       </div>
@@ -300,6 +295,29 @@ const TotalCard = ({ total }: TotalCardProps) => {
       <p className="mt-2 text-3xl font-bold tracking-tight text-[var(--ankara-blue)] dark:text-white">
         ${total.toLocaleString("es-AR")}
       </p>
+    </article>
+  );
+};
+
+type CurrentMonthCardProps = {
+  label: string;
+};
+
+const CurrentMonthCard = ({ label }: CurrentMonthCardProps) => {
+  return (
+    <article className="rounded-3xl border border-[var(--border)] bg-[var(--surface-mint)] p-5 shadow-sm">
+      <div className="flex items-start justify-between gap-3">
+        <div>
+          <p className="text-sm font-medium text-[var(--muted)]">Mes actual</p>
+          <p className="mt-2 text-3xl font-bold tracking-tight text-[var(--ankara-blue)] dark:text-white">
+            {label}
+          </p>
+        </div>
+
+        <span className="rounded-full bg-[var(--card)] px-3 py-1 text-xs font-semibold uppercase tracking-[0.12em] text-[var(--ankara-blue)] ring-1 ring-[var(--ring)] dark:text-[var(--ankara-mint)]">
+          Activo
+        </span>
+      </div>
     </article>
   );
 };

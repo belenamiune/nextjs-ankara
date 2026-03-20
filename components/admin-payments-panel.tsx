@@ -292,7 +292,7 @@ const AdminPaymentsPanel = ({
         </div>
 
         <div className="grid gap-4">
-          {players.map((player, index) => {
+          {players.map((player) => {
             const profesorPayment = getPaymentForPlayerAndCharge(
               paymentsState,
               player.id,
@@ -307,16 +307,10 @@ const AdminPaymentsPanel = ({
 
             const isExpanded = !!expandedPlayers[player.id];
 
-            const playerCardVariants = [
-              "bg-[var(--card)]",
-              "bg-[var(--surface-soft)]",
-              "bg-[var(--surface-mint)]",
-            ];
-
             return (
               <article
                 key={player.id}
-                className={`rounded-3xl border border-[var(--border)] p-4 shadow-sm transition-all duration-200 hover:-translate-y-0.5 ${playerCardVariants[index % playerCardVariants.length]}`}
+                className="rounded-3xl border border-[var(--border)] bg-[var(--card)] p-4 shadow-sm transition-all duration-200 hover:-translate-y-0.5"
               >
                 <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                   <div>
