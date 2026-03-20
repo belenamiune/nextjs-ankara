@@ -39,6 +39,7 @@ import {
   PlayerRow,
 } from "@/types/database";
 import CopyAliasButton from "@/components/copy-alias-button";
+import PageModeSwitch from "@/components/page-mode-switch";
 
 export default function Home() {
   const [players, setPlayers] = useState<Player[]>([]);
@@ -120,7 +121,8 @@ export default function Home() {
   return (
     <main className="min-h-screen bg-gray-50">
       <div className="mx-auto flex w-full max-w-6xl flex-col gap-6 px-4 py-6 sm:px-6 lg:px-8">
-        <header className="flex flex-col gap-2">
+       <header className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+        <div className="flex flex-col gap-2">
           <span className="w-fit rounded-full bg-white px-3 py-1 text-xs font-semibold uppercase tracking-wide text-gray-700 ring-1 ring-gray-200">
             Público
           </span>
@@ -133,7 +135,10 @@ export default function Home() {
               Estado mensual de pagos del equipo.
             </p>
           </div>
-        </header>
+        </div>
+
+        <PageModeSwitch href="/admin" label="Admin" dark />
+      </header>
 
         <section className="grid gap-4 xl:grid-cols-3">
           <ProfesorCard
@@ -189,7 +194,7 @@ export default function Home() {
                   <div className="mt-4 space-y-3">
                     <div className="flex items-center justify-between gap-3">
                       <span className="text-sm font-medium text-gray-600">
-                        Profesor
+                        Zurdo
                       </span>
                       <PaymentStatusBadge paid={profesorPayment?.paid ?? false} />
                     </div>
@@ -226,7 +231,7 @@ const ProfesorCard = ({
 }: ProfesorCardProps) => {
   return (
     <article className="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm">
-      <p className="text-sm font-medium text-gray-500">Profesor</p>
+      <p className="text-sm font-medium text-gray-500">Zurdo</p>
       <p className="mt-2 text-3xl font-bold tracking-tight text-gray-900">
         ${amount.toLocaleString("es-AR")}
       </p>

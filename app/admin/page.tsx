@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import AdminPaymentsPanel from "@/components/admin-payments-panel";
 import { createBrowserSupabaseClient } from "@/lib/supabase/client";
+import Link  from "next/link";
 import {
   adaptFieldEvent,
   adaptFieldPayment,
@@ -28,6 +29,7 @@ import {
   PlayerRow,
 } from "@/types/database";
 import FullScreenLoader from "@/components/full-screen-loader";
+import PageModeSwitch from "@/components/page-mode-switch";
 
 export default function AdminPage() {
   const [players, setPlayers] = useState<Player[]>([]);
@@ -98,7 +100,8 @@ export default function AdminPage() {
   return (
     <main className="min-h-screen bg-gray-50">
       <div className="mx-auto flex w-full max-w-6xl flex-col gap-6 px-4 py-6 sm:px-6 lg:px-8">
-        <header className="flex flex-col gap-2">
+            <header className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+        <div className="flex flex-col gap-2">
           <span className="w-fit rounded-full bg-black px-3 py-1 text-xs font-semibold uppercase tracking-wide text-white">
             Admin
           </span>
@@ -111,7 +114,9 @@ export default function AdminPage() {
               Gestioná pagos de profesor y canchas.
             </p>
           </div>
-        </header>
+        </div>
+          <PageModeSwitch href="/" label="Dashboard" dark />
+      </header>
 
         <AdminPaymentsPanel
           players={players}

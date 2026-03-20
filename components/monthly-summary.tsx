@@ -2,9 +2,10 @@ import { MonthConfig } from "@/types";
 
 type MonthlySummaryProps = {
   month: MonthConfig;
+  totalFieldEvents: number;
 };
 
-const MonthlySummary = ({ month }: MonthlySummaryProps) => {
+const MonthlySummary = ({ month, totalFieldEvents }: MonthlySummaryProps) => {
   return (
     <section className="rounded-2xl border border-gray-200 bg-white p-4 shadow-sm sm:p-5">
       <div className="mb-4 flex flex-col gap-1">
@@ -20,6 +21,7 @@ const MonthlySummary = ({ month }: MonthlySummaryProps) => {
         <SummaryItem label="Mes" value={month.label} />
         <SummaryItem label="Alias" value={month.alias} />
         <SummaryItem label="Vencimiento" value={month.dueDate} />
+        <SummaryItem label="Domingos" value={String(totalFieldEvents)} />
       </div>
     </section>
   );

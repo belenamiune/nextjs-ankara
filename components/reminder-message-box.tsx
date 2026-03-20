@@ -1,16 +1,32 @@
 "use client";
 
+import { useState } from "react";
+import { Copy, Check, MessageCircle } from "lucide-react";
+
 type ReminderMessageBoxProps = {
   message: string;
 };
 
 const ReminderMessageBox = ({ message }: ReminderMessageBoxProps) => {
+  const [copied, setCopied] = useState(false);
+
   const handleCopy = async () => {
     try {
       await navigator.clipboard.writeText(message);
+      setCopied(true);
+
+      setTimeout(() => {
+        setCopied(false);
+      }, 2000);
     } catch (error) {
       console.error("No se pudo copiar el mensaje", error);
     }
+  };
+
+  const handleWhatsApp = () => {
+    const encodedMessage = encodeURIComponent(message);
+    const whatsappUrl = `https://wa.me/?text=${encodedMessage}`;
+    window.open(whatsappUrl, "_blank");
   };
 
   return (
@@ -25,12 +41,25 @@ const ReminderMessageBox = ({ message }: ReminderMessageBoxProps) => {
           </p>
         </div>
 
-        <button
-          onClick={handleCopy}
-          className="inline-flex items-center justify-center rounded-xl bg-black px-4 py-2 text-sm font-medium text-white transition hover:opacity-90"
-        >
-          Copiar mensaje
-        </button>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={handleCopy}
+            aria-label="Copiar mensaje"
+            title="Copiar mensaje"
+            className="inline-flex h-10 w-10 items-center justify-center rounded-xl bg-black text-white transition hover:opacity-90"
+          >
+            {copied ? <Check size={18} /> : <Copy size={18} />}
+          </button>
+
+          <button
+            onClick={handleWhatsApp}
+            aria-label="Abrir en WhatsApp"
+            title="Abrir en WhatsApp"
+            className="inline-flex h-10 w-10 items-center justify-center rounded-xl bg-green-600 text-white transition hover:opacity-90"
+          >
+            <MessageCircle size={18} />
+          </button>
+        </div>
       </div>
 
       <textarea

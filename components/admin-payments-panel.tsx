@@ -241,16 +241,16 @@ const AdminPaymentsPanel = ({
       pendingPlayersLines.length > 0
         ? `Hola chicas, les paso lo pendiente de ${month.label}:\n\n${pendingPlayersLines.join(
             "\n"
-          )}\n\nPor favor, cuando vayan pagando avísenme así lo actualizo. Gracias 💛`
-        : `Todas las jugadoras están al día en ${month.label}. 💛`;
+          )}\n\nPor favor, cuando vayan pagando avísenme así lo actualizo. Gracias 💙`
+        : `Todas las jugadoras están al día en ${month.label}. 💙`;
 
   return (
     <section className="flex flex-col gap-6">
-      <MonthlySummary month={month} />
+      <MonthlySummary month={month} totalFieldEvents={totalFieldEvents} />
 
       <section className="grid gap-4 sm:grid-cols-2 xl:grid-cols-6">
       <StatCard
-        label="Profesor"
+        label="Zurdo"
         value={`$${(profesorCharge?.amount ?? 0).toLocaleString("es-AR")}`}
       />
       <StatCard
@@ -261,7 +261,6 @@ const AdminPaymentsPanel = ({
         label="Total del mes"
         value={`$${totalMonth.toLocaleString("es-AR")}`}
       />
-      <StatCard label="Domingos" value={String(totalFieldEvents)} />
       <StatCard
         label="Total esperado"
         value={`$${expectedTotal.toLocaleString("es-AR")}`}
@@ -282,7 +281,7 @@ const AdminPaymentsPanel = ({
             Jugadoras
           </h2>
           <p className="text-sm text-gray-500">
-            Profesor y detalle de canchas por jugadora.
+            Cuota y detalle de canchas por jugadora.
           </p>
         </div>
 
@@ -312,7 +311,7 @@ const AdminPaymentsPanel = ({
                       {player.name}
                     </h3>
                     <p className="text-sm text-gray-500">
-                      Profesor: {profesorPayment?.paid ? "Pago" : "Pendiente"} · Canchas: {paidFieldsCount}/{totalFieldEvents}
+                      Zurdo: {profesorPayment?.paid ? "Pago" : "Pendiente"} · Canchas: {paidFieldsCount}/{totalFieldEvents}
                     </p>
                   </div>
 
@@ -330,7 +329,7 @@ const AdminPaymentsPanel = ({
                     <div className="rounded-2xl border border-gray-200 bg-white p-4">
                       <div className="flex items-center justify-between gap-3">
                         <span className="text-sm font-semibold text-gray-700">
-                          Profesor
+                          Zurdo
                         </span>
                         <PaymentStatusBadge paid={profesorPayment?.paid ?? false} />
                       </div>

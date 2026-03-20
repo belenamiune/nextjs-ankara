@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { Copy, Check } from "lucide-react";
 
 type CopyAliasButtonProps = {
   alias: string;
@@ -23,7 +24,7 @@ const CopyAliasButton = ({ alias }: CopyAliasButtonProps) => {
   };
 
   return (
-    <div className="flex flex-col items-start gap-2 sm:flex-row sm:items-center">
+    <div className="flex items-center gap-2">
       <span className="rounded-lg bg-gray-100 px-3 py-2 text-sm font-medium text-gray-800">
         {alias}
       </span>
@@ -31,9 +32,11 @@ const CopyAliasButton = ({ alias }: CopyAliasButtonProps) => {
       <button
         type="button"
         onClick={handleCopy}
-        className="inline-flex items-center justify-center rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm font-medium text-gray-700 transition hover:bg-gray-100"
+        aria-label="Copiar alias"
+        title="Copiar alias"
+        className="inline-flex h-10 w-10 items-center justify-center rounded-lg border border-gray-300 bg-white text-gray-700 transition hover:bg-gray-100"
       >
-        {copied ? "Copiado" : "Copiar alias"}
+        {copied ? <Check size={18} /> : <Copy size={18} />}
       </button>
     </div>
   );
