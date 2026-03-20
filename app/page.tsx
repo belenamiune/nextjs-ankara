@@ -20,6 +20,7 @@ import {
   getTotalFieldEventsCount,
 } from "@/lib/field-helpers";
 import PaymentStatusBadge from "@/components/payment-status-badge";
+import FullScreenLoader  from "@/components/full-screen-loader";
 import {
   FieldEvent,
   FieldPayment,
@@ -107,9 +108,9 @@ export default function Home() {
     fetchData();
   }, []);
 
-  if (loading || !currentMonth) {
-    return <p className="p-6">Cargando...</p>;
-  }
+    if (loading || !currentMonth) {
+      return <FullScreenLoader text="Cargando" />;
+    }
 
   const profesorCharge = getChargeByCode(monthCharges, "profesor");
   const totalFields = getTotalFieldAmount(fieldEvents);

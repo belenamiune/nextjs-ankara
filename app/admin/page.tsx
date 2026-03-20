@@ -27,6 +27,7 @@ import {
   PaymentRow,
   PlayerRow,
 } from "@/types/database";
+import FullScreenLoader from "@/components/full-screen-loader";
 
 export default function AdminPage() {
   const [players, setPlayers] = useState<Player[]>([]);
@@ -91,13 +92,7 @@ export default function AdminPage() {
   }, []);
 
   if (loading || !currentMonth) {
-    return (
-      <main className="min-h-screen bg-gray-50">
-        <div className="mx-auto flex w-full max-w-6xl flex-col gap-6 px-4 py-6 sm:px-6 lg:px-8">
-          <p className="text-sm text-gray-500">Cargando panel admin...</p>
-        </div>
-      </main>
-    );
+    return <FullScreenLoader text="Cargando" />;
   }
 
   return (
