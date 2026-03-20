@@ -42,53 +42,82 @@ export default function AdminPage() {
 
   useEffect(() => {
     const fetchData = async () => {
-      const supabase = createBrowserSupabaseClient();
+    const supabase = createBrowserSupabaseClient();
 
-      const [
-        playersResponse,
-        monthResponse,
-        chargesResponse,
-        paymentsResponse,
-        fieldEventsResponse,
-        fieldPaymentsResponse,
-      ] = await Promise.all([
-        supabase.from("players").select("*").order("id", { ascending: true }),
-        supabase.from("months").select("*").eq("is_current", true).single(),
-        supabase
-          .from("month_charges")
-          .select("*, charge_concepts(*)")
-          .order("id", { ascending: true }),
-        supabase.from("payments").select("*").order("id", { ascending: true }),
-        supabase.from("field_events").select("*").order("event_date", { ascending: true }),
-        supabase.from("field_payments").select("*").order("id", { ascending: true }),
-      ]);
+    const playersResponse = await supabase
+      .from("players")
+      .select("*")
+      .order("id", { ascending: true });
 
-      if (playersResponse.error) console.error(playersResponse.error);
-      if (monthResponse.error) console.error(monthResponse.error);
-      if (chargesResponse.error) console.error(chargesResponse.error);
-      if (paymentsResponse.error) console.error(paymentsResponse.error);
-      if (fieldEventsResponse.error) console.error(fieldEventsResponse.error);
-      if (fieldPaymentsResponse.error) console.error(fieldPaymentsResponse.error);
+    const monthResponse = await supabase
+      .from("months")
+      .select("*")
+      .eq("is_current", true)
+      .single();
 
-      setPlayers(((playersResponse.data ?? []) as PlayerRow[]).map(adaptPlayer));
-      setCurrentMonth(
-        monthResponse.data ? adaptMonth(monthResponse.data as MonthRow) : null
-      );
-      setMonthCharges(
-        ((chargesResponse.data ?? []) as MonthChargeRow[]).map(adaptMonthCharge)
-      );
-      setPayments(
-        ((paymentsResponse.data ?? []) as PaymentRow[]).map(adaptPayment)
-      );
-      setFieldEvents(
-        ((fieldEventsResponse.data ?? []) as FieldEventRow[]).map(adaptFieldEvent)
-      );
-      setFieldPayments(
-        ((fieldPaymentsResponse.data ?? []) as FieldPaymentRow[]).map(adaptFieldPayment)
-      );
-
+    if (playersResponse.error) console.error(playersResponse.error);
+    if (monthResponse.error || !monthResponse.data) {
+      console.error(monthResponse.error);
       setLoading(false);
-    };
+      return;
+    }
+
+    const currentMonthId = monthResponse.data.id;
+
+    const chargesResponse = await supabase
+      .from("month_charges")
+      .select("*, charge_concepts(*)")
+      .eq("month_id", currentMonthId)
+      .order("id", { ascending: true });
+
+    const fieldEventsResponse = await supabase
+      .from("field_events")
+      .select("*")
+      .eq("month_id", currentMonthId)
+      .order("event_date", { ascending: true });
+
+    if (chargesResponse.error) console.error(chargesResponse.error);
+    if (fieldEventsResponse.error) console.error(fieldEventsResponse.error);
+
+    const monthChargeIds = (chargesResponse.data ?? []).map((charge) => charge.id);
+    const fieldEventIds = (fieldEventsResponse.data ?? []).map((event) => event.id);
+
+    const paymentsResponse = monthChargeIds.length
+      ? await supabase
+          .from("payments")
+          .select("*")
+          .in("month_charge_id", monthChargeIds)
+          .order("id", { ascending: true })
+      : { data: [], error: null };
+
+    const fieldPaymentsResponse = fieldEventIds.length
+      ? await supabase
+          .from("field_payments")
+          .select("*")
+          .in("field_event_id", fieldEventIds)
+          .order("id", { ascending: true })
+      : { data: [], error: null };
+
+    if (paymentsResponse.error) console.error(paymentsResponse.error);
+    if (fieldPaymentsResponse.error) console.error(fieldPaymentsResponse.error);
+
+    setPlayers(((playersResponse.data ?? []) as PlayerRow[]).map(adaptPlayer));
+    setCurrentMonth(adaptMonth(monthResponse.data as MonthRow));
+    setMonthCharges(
+      ((chargesResponse.data ?? []) as MonthChargeRow[]).map(adaptMonthCharge)
+    );
+    setPayments(((paymentsResponse.data ?? []) as PaymentRow[]).map(adaptPayment));
+    setFieldEvents(
+      ((fieldEventsResponse.data ?? []) as FieldEventRow[]).map(adaptFieldEvent)
+    );
+    setFieldPayments(
+      ((fieldPaymentsResponse.data ?? []) as FieldPaymentRow[]).map(
+        adaptFieldPayment
+      )
+    );
+
+    setLoading(false);
+  };
 
     fetchData();
   }, []);
