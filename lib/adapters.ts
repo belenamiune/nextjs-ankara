@@ -1,5 +1,19 @@
-import { MonthRow, PaymentRow, PlayerRow } from "@/types/database";
-import { Player, MonthConfig, Payment } from "@/types";
+import {
+  FieldEvent,
+  FieldPayment,
+  MonthConfig,
+  MonthCharge,
+  Payment,
+  Player,
+} from "@/types";
+import {
+  FieldEventRow,
+  FieldPaymentRow,
+  MonthChargeRow,
+  MonthRow,
+  PaymentRow,
+  PlayerRow,
+} from "@/types/database";
 
 export function adaptPlayer(row: PlayerRow): Player {
   return {
@@ -15,9 +29,24 @@ export function adaptMonth(row: MonthRow): MonthConfig {
   return {
     id: row.id,
     label: row.label,
-    amount: row.amount,
     dueDate: row.due_date,
     alias: row.alias,
+    totalPaymentLink: row.total_payment_link ?? undefined,
+    fieldTotalPaymentLink: row.field_total_payment_link ?? undefined,
+  };
+}
+
+export function adaptMonthCharge(row: MonthChargeRow): MonthCharge {
+  return {
+    id: row.id,
+    monthId: row.month_id,
+    conceptId: row.concept_id,
+    conceptCode: row.charge_concepts?.code ?? "",
+    conceptName: row.charge_concepts?.name ?? "",
+    amount: row.amount,
+    alias: row.alias ?? undefined,
+    paymentLink: row.payment_link ?? undefined,
+    active: row.active,
   };
 }
 
@@ -25,7 +54,31 @@ export function adaptPayment(row: PaymentRow): Payment {
   return {
     id: row.id,
     playerId: row.player_id,
+    monthChargeId: row.month_charge_id,
+    paid: row.paid,
+    paidAt: row.paid_at ?? undefined,
+    amountPaid: row.amount_paid ?? undefined,
+    notes: row.notes ?? undefined,
+  };
+}
+
+export function adaptFieldEvent(row: FieldEventRow): FieldEvent {
+  return {
+    id: row.id,
     monthId: row.month_id,
+    eventDate: row.event_date,
+    label: row.label,
+    amount: row.amount,
+    paymentLink: row.payment_link ?? undefined,
+    active: row.active,
+  };
+}
+
+export function adaptFieldPayment(row: FieldPaymentRow): FieldPayment {
+  return {
+    id: row.id,
+    playerId: row.player_id,
+    fieldEventId: row.field_event_id,
     paid: row.paid,
     paidAt: row.paid_at ?? undefined,
     amountPaid: row.amount_paid ?? undefined,

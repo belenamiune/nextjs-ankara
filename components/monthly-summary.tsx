@@ -18,10 +18,6 @@ const MonthlySummary = ({ month }: MonthlySummaryProps) => {
 
       <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
         <SummaryItem label="Mes" value={month.label} />
-        <SummaryItem
-          label="Cuota"
-          value={`$${month.amount.toLocaleString("es-AR")}`}
-        />
         <SummaryItem label="Alias" value={month.alias} />
         <SummaryItem label="Vencimiento" value={month.dueDate} />
       </div>

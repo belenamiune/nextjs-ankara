@@ -1,39 +1,42 @@
-import { Player, Payment } from "@/types";
+import { MonthCharge, Payment, Player } from "@/types";
+import { getPaymentForPlayerAndCharge, getTotalMonthAmount } from "@/lib/charge-helpers";
 
-export function paidCount(payments: Payment[]) {
-  return payments.filter((payment) => payment.paid).length;
-}
+type MonthSummaryParams = {
+  players: Player[];
+  payments: Payment[];
+  monthCharges: MonthCharge[];
+};
 
-export function pendingCount(players: Player[], payments: Payment[]) {
+export function getMonthSummary({
+  players,
+  payments,
+  monthCharges,
+}: MonthSummaryParams) {
   const activePlayers = players.filter((player) => player.active);
-  const paidPlayers = payments.filter((payment) => payment.paid).length;
+  const activeCharges = monthCharges.filter((charge) => charge.active);
 
-  return activePlayers.length - paidPlayers;
-}
+  const paidCount = payments.filter((payment) => payment.paid).length;
 
-export function totalExpected(players: Player[], amount: number) {
-  const activePlayers = players.filter((player) => player.active);
+  const totalExpected = activePlayers.length * getTotalMonthAmount(activeCharges);
 
-  return activePlayers.length * amount;
-}
-
-export function totalCollected(payments: Payment[]) {
-  return payments
+  const totalCollected = payments
     .filter((payment) => payment.paid)
-    .reduce((total, payment) => total + (payment.amountPaid ?? 0), 0);
-}
+    .reduce((acc, payment) => acc + (payment.amountPaid ?? 0), 0);
 
-export function getMonthSummary(
-  players: Player[],
-  payments: Payment[],
-  amount: number
-) {
+  const fullyUpToDateCount = activePlayers.filter((player) => {
+    return activeCharges.every((charge) => {
+      const payment = getPaymentForPlayerAndCharge(payments, player.id, charge.id);
+      return payment?.paid;
+    });
+  }).length;
+
+  const pendingPlayersCount = activePlayers.length - fullyUpToDateCount;
+
   return {
-    paidCount: paidCount(payments),
-    pendingCount: pendingCount(players, payments),
-    totalExpected: totalExpected(players, amount),
-    totalCollected: totalCollected(payments),
+    paidCount,
+    pendingPlayersCount,
+    totalExpected,
+    totalCollected,
+    totalMonthAmount: getTotalMonthAmount(activeCharges),
   };
 }
-
-// para paid: si una jugadora paga parcial, o paga dos veces, esa lógica cambia.

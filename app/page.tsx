@@ -2,51 +2,105 @@
 
 import { useEffect, useState } from "react";
 import { createBrowserSupabaseClient } from "@/lib/supabase/client";
-import { adaptMonth, adaptPayment, adaptPlayer } from "@/lib/adapters";
-import { getMonthSummary } from "@/lib/get-month-summary";
-import MonthlySummary from "@/components/monthly-summary";
+import {
+  adaptFieldEvent,
+  adaptFieldPayment,
+  adaptMonth,
+  adaptMonthCharge,
+  adaptPayment,
+  adaptPlayer,
+} from "@/lib/adapters";
+import {
+  getChargeByCode,
+  getPaymentForPlayerAndCharge,
+} from "@/lib/charge-helpers";
+import {
+  getPaidFieldEventsCountForPlayer,
+  getTotalFieldAmount,
+  getTotalFieldEventsCount,
+} from "@/lib/field-helpers";
 import PaymentStatusBadge from "@/components/payment-status-badge";
-import { MonthConfig, Payment, Player } from "@/types";
-import { MonthRow, PaymentRow, PlayerRow } from "@/types/database";
+import {
+  FieldEvent,
+  FieldPayment,
+  MonthCharge,
+  MonthConfig,
+  Payment,
+  Player,
+} from "@/types";
+import {
+  FieldEventRow,
+  FieldPaymentRow,
+  MonthChargeRow,
+  MonthRow,
+  PaymentRow,
+  PlayerRow,
+} from "@/types/database";
 
 export default function Home() {
   const [players, setPlayers] = useState<Player[]>([]);
   const [currentMonth, setCurrentMonth] = useState<MonthConfig | null>(null);
+  const [monthCharges, setMonthCharges] = useState<MonthCharge[]>([]);
   const [payments, setPayments] = useState<Payment[]>([]);
+  const [fieldEvents, setFieldEvents] = useState<FieldEvent[]>([]);
+  const [fieldPayments, setFieldPayments] = useState<FieldPayment[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const fetchData = async () => {
       const supabase = createBrowserSupabaseClient();
 
-      const [playersResponse, monthResponse, paymentsResponse] =
-        await Promise.all([
-          supabase.from("players").select("*").order("id", { ascending: true }),
-          supabase.from("months").select("*").eq("is_current", true).single(),
-          supabase.from("payments").select("*").order("id", { ascending: true }),
-        ]);
+      const [
+        playersResponse,
+        monthResponse,
+        chargesResponse,
+        paymentsResponse,
+        fieldEventsResponse,
+        fieldPaymentsResponse,
+      ] = await Promise.all([
+        supabase.from("players").select("*").order("id", { ascending: true }),
+        supabase.from("months").select("*").eq("is_current", true).single(),
+        supabase
+          .from("month_charges")
+          .select("*, charge_concepts(*)")
+          .order("id", { ascending: true }),
+        supabase.from("payments_v2").select("*").order("id", { ascending: true }),
+        supabase
+          .from("field_events")
+          .select("*")
+          .order("event_date", { ascending: true }),
+        supabase
+          .from("field_payments")
+          .select("*")
+          .order("id", { ascending: true }),
+      ]);
 
-      if (playersResponse.error) {
-        console.error("Error trayendo players:", playersResponse.error);
-      }
+      if (playersResponse.error) console.error(playersResponse.error);
+      if (monthResponse.error) console.error(monthResponse.error);
+      if (chargesResponse.error) console.error(chargesResponse.error);
+      if (paymentsResponse.error) console.error(paymentsResponse.error);
+      if (fieldEventsResponse.error) console.error(fieldEventsResponse.error);
+      if (fieldPaymentsResponse.error) console.error(fieldPaymentsResponse.error);
 
-      if (monthResponse.error) {
-        console.error("Error trayendo month:", monthResponse.error);
-      }
+      setPlayers(((playersResponse.data ?? []) as PlayerRow[]).map(adaptPlayer));
+      setCurrentMonth(
+        monthResponse.data ? adaptMonth(monthResponse.data as MonthRow) : null
+      );
+      setMonthCharges(
+        ((chargesResponse.data ?? []) as MonthChargeRow[]).map(adaptMonthCharge)
+      );
+      setPayments(
+        ((paymentsResponse.data ?? []) as PaymentRow[]).map(adaptPayment)
+      );
+      setFieldEvents(
+        ((fieldEventsResponse.data ?? []) as FieldEventRow[]).map(adaptFieldEvent)
+      );
+      setFieldPayments(
+        ((fieldPaymentsResponse.data ?? []) as FieldPaymentRow[]).map(
+          adaptFieldPayment
+        )
+      );
 
-      if (paymentsResponse.error) {
-        console.error("Error trayendo payments:", paymentsResponse.error);
-      }
-
-      const adaptedPlayers = ((playersResponse.data ?? []) as PlayerRow[]).map(adaptPlayer);
-      const adaptedMonth = monthResponse.data
-        ? adaptMonth(monthResponse.data as MonthRow)
-        : null;
-      const adaptedPayments = ((paymentsResponse.data ?? []) as PaymentRow[]).map(adaptPayment);
-
-      setPlayers(adaptedPlayers);
-      setCurrentMonth(adaptedMonth);
-      setPayments(adaptedPayments);
       setLoading(false);
     };
 
@@ -54,10 +108,13 @@ export default function Home() {
   }, []);
 
   if (loading || !currentMonth) {
-    return <p>Cargando...</p>;
+    return <p className="p-6">Cargando...</p>;
   }
 
-  const summary = getMonthSummary(players, payments, currentMonth.amount);
+  const profesorCharge = getChargeByCode(monthCharges, "profesor");
+  const totalFields = getTotalFieldAmount(fieldEvents);
+  const totalFieldEvents = getTotalFieldEventsCount(fieldEvents);
+  const totalMonth = (profesorCharge?.amount ?? 0) + totalFields;
 
   return (
     <main className="min-h-screen bg-gray-50">
@@ -77,18 +134,26 @@ export default function Home() {
           </div>
         </header>
 
-        <MonthlySummary month={currentMonth} />
-
-        <section className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-          <StatCard label="Pagaron" value={String(summary.paidCount)} />
-          <StatCard label="Pendientes" value={String(summary.pendingCount)} />
-          <StatCard
-            label="Total esperado"
-            value={`$${summary.totalExpected.toLocaleString("es-AR")}`}
+        <section className="grid gap-4 xl:grid-cols-3">
+          <ProfesorCard
+            amount={profesorCharge?.amount ?? 0}
+            dueDate={currentMonth.dueDate}
+            alias={profesorCharge?.alias ?? currentMonth.alias}
+            paymentLink={profesorCharge?.paymentLink}
           />
-          <StatCard
-            label="Total cobrado"
-            value={`$${summary.totalCollected.toLocaleString("es-AR")}`}
+
+          <FieldSummaryCard
+            totalAmount={totalFields}
+            dueDate={currentMonth.dueDate}
+            alias={currentMonth.alias}
+            totalPaymentLink={currentMonth.fieldTotalPaymentLink}
+            fieldEvents={fieldEvents}
+          />
+
+          <TotalCard
+            total={totalMonth}
+            dueDate={currentMonth.dueDate}
+            paymentLink={currentMonth.totalPaymentLink}
           />
         </section>
 
@@ -98,14 +163,22 @@ export default function Home() {
               Estado de jugadoras
             </h2>
             <p className="text-sm text-gray-500">
-              Visualización pública del estado de pago del mes.
+              Estado por concepto del mes actual.
             </p>
           </div>
 
           <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
             {players.map((player) => {
-              const payment = payments.find(
-                (payment) => payment.playerId === player.id
+              const profesorPayment = getPaymentForPlayerAndCharge(
+                payments,
+                player.id,
+                profesorCharge?.id
+              );
+
+              const paidFieldsCount = getPaidFieldEventsCountForPlayer(
+                fieldPayments,
+                player.id,
+                fieldEvents
               );
 
               return (
@@ -113,17 +186,26 @@ export default function Home() {
                   key={player.id}
                   className="rounded-2xl border border-gray-200 bg-gray-50 p-4"
                 >
-                  <div className="flex items-start justify-between gap-3">
-                    <div>
-                      <h3 className="text-base font-semibold text-gray-900">
-                        {player.name}
-                      </h3>
-                      <p className="mt-1 text-sm text-gray-500">
-                        Jugadora activa
-                      </p>
+                  <h3 className="text-base font-semibold text-gray-900">
+                    {player.name}
+                  </h3>
+
+                  <div className="mt-4 space-y-3">
+                    <div className="flex items-center justify-between gap-3">
+                      <span className="text-sm font-medium text-gray-600">
+                        Profesor
+                      </span>
+                      <PaymentStatusBadge paid={profesorPayment?.paid ?? false} />
                     </div>
 
-                    <PaymentStatusBadge paid={payment?.paid ?? false} />
+                    <div className="flex items-center justify-between gap-3">
+                      <span className="text-sm font-medium text-gray-600">
+                        Canchas
+                      </span>
+                      <span className="rounded-full bg-gray-200 px-3 py-1 text-xs font-semibold text-gray-700">
+                        {paidFieldsCount}/{totalFieldEvents} pagadas
+                      </span>
+                    </div>
                   </div>
                 </article>
               );
@@ -135,18 +217,142 @@ export default function Home() {
   );
 }
 
-type StatCardProps = {
-  label: string;
-  value: string;
+type ProfesorCardProps = {
+  amount: number;
+  dueDate: string;
+  alias?: string;
+  paymentLink?: string;
 };
 
-const StatCard = ({ label, value }: StatCardProps) => {
+const ProfesorCard = ({
+  amount,
+  dueDate,
+  alias,
+  paymentLink,
+}: ProfesorCardProps) => {
   return (
-    <article className="rounded-2xl border border-gray-200 bg-white p-4 shadow-sm sm:p-5">
-      <p className="text-sm font-medium text-gray-500">{label}</p>
-      <p className="mt-2 text-2xl font-bold tracking-tight text-gray-900 sm:text-3xl">
-        {value}
+    <article className="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm">
+      <p className="text-sm font-medium text-gray-500">Profesor</p>
+      <p className="mt-2 text-3xl font-bold tracking-tight text-gray-900">
+        ${amount.toLocaleString("es-AR")}
       </p>
+
+      <div className="mt-4 space-y-2 text-sm text-gray-600">
+        <p>Vence: {dueDate}</p>
+        <p>Alias: {alias ?? "-"}</p>
+      </div>
+
+      {paymentLink && (
+        <a
+          href={paymentLink}
+          target="_blank"
+          rel="noreferrer"
+          className="mt-4 inline-flex rounded-xl bg-black px-4 py-2 text-sm font-medium text-white transition hover:opacity-90"
+        >
+          Pagar profesor
+        </a>
+      )}
+    </article>
+  );
+};
+
+type FieldSummaryCardProps = {
+  totalAmount: number;
+  dueDate: string;
+  alias?: string;
+  totalPaymentLink?: string;
+  fieldEvents: FieldEvent[];
+};
+
+const FieldSummaryCard = ({
+  totalAmount,
+  dueDate,
+  alias,
+  totalPaymentLink,
+  fieldEvents,
+}: FieldSummaryCardProps) => {
+  return (
+    <article className="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm">
+      <p className="text-sm font-medium text-gray-500">Canchas del mes</p>
+      <p className="mt-2 text-3xl font-bold tracking-tight text-gray-900">
+        ${totalAmount.toLocaleString("es-AR")}
+      </p>
+
+      <div className="mt-4 space-y-2 text-sm text-gray-600">
+        <p>Vence: {dueDate}</p>
+        <p>Alias: {alias ?? "-"}</p>
+        <p>{fieldEvents.length} domingos en el mes</p>
+      </div>
+
+      {totalPaymentLink && (
+        <a
+          href={totalPaymentLink}
+          target="_blank"
+          rel="noreferrer"
+          className="mt-4 inline-flex rounded-xl bg-black px-4 py-2 text-sm font-medium text-white transition hover:opacity-90"
+        >
+          Pagar total canchas
+        </a>
+      )}
+
+      <div className="mt-5 space-y-3 border-t border-gray-200 pt-4">
+        {fieldEvents.map((event) => (
+          <div
+            key={event.id}
+            className="flex flex-col gap-3 rounded-xl border border-gray-200 bg-gray-50 p-3 sm:flex-row sm:items-center sm:justify-between"
+          >
+            <div>
+              <p className="text-sm font-semibold text-gray-900">{event.label}</p>
+              <p className="text-xs text-gray-500">
+                {event.eventDate} · ${event.amount.toLocaleString("es-AR")}
+              </p>
+            </div>
+
+            {event.paymentLink && (
+              <a
+                href={event.paymentLink}
+                target="_blank"
+                rel="noreferrer"
+                className="inline-flex items-center justify-center rounded-lg bg-gray-900 px-3 py-2 text-sm font-medium text-white transition hover:opacity-90"
+              >
+                Pagar individual
+              </a>
+            )}
+          </div>
+        ))}
+      </div>
+    </article>
+  );
+};
+
+type TotalCardProps = {
+  total: number;
+  dueDate: string;
+  paymentLink?: string;
+};
+
+const TotalCard = ({ total, dueDate, paymentLink }: TotalCardProps) => {
+  return (
+    <article className="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm">
+      <p className="text-sm font-medium text-gray-500">Total del mes</p>
+      <p className="mt-2 text-3xl font-bold tracking-tight text-gray-900">
+        ${total.toLocaleString("es-AR")}
+      </p>
+
+      <div className="mt-4 space-y-2 text-sm text-gray-600">
+        <p>Vence: {dueDate}</p>
+      </div>
+
+      {paymentLink && (
+        <a
+          href={paymentLink}
+          target="_blank"
+          rel="noreferrer"
+          className="mt-4 inline-flex rounded-xl bg-black px-4 py-2 text-sm font-medium text-white transition hover:opacity-90"
+        >
+          Pagar total del mes
+        </a>
+      )}
     </article>
   );
 };
