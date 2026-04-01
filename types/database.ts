@@ -1,10 +1,10 @@
 export type PlayerRow = {
   id: number;
   name: string;
-  phone: string | null;
+  nickname: string | null;
   email: string | null;
+  birth_date: string | null;
   active: boolean;
-  created_at: string;
 };
 
 export type MonthRow = {

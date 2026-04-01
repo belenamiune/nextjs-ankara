@@ -49,10 +49,7 @@ export default function AdminMatchesPanel({
     return [...matches].sort((a, b) => a.roundNumber - b.roundNumber);
   }, [matches]);
 
-  const handleChange = (
-    field: keyof FormState,
-    value: string
-  ) => {
+  const handleChange = (field: keyof FormState, value: string) => {
     setForm((prev) => ({
       ...prev,
       [field]: value,
@@ -91,7 +88,8 @@ export default function AdminMatchesPanel({
       field_label: form.fieldLabel.trim(),
       status: form.status,
       result: isPlayed ? form.result || null : null,
-      ankara_goals: isPlayed && form.ankaraGoals !== "" ? Number(form.ankaraGoals) : null,
+      ankara_goals:
+        isPlayed && form.ankaraGoals !== "" ? Number(form.ankaraGoals) : null,
       opponent_goals:
         isPlayed && form.opponentGoals !== "" ? Number(form.opponentGoals) : null,
       scorers: isPlayed ? scorersArray : [],
@@ -175,7 +173,7 @@ export default function AdminMatchesPanel({
     resetForm();
   };
 
-    const handleEditMatch = (match: Match) => {
+  const handleEditMatch = (match: Match) => {
     setEditingMatchId(match.id);
     setFeedback(null);
 
@@ -199,21 +197,16 @@ export default function AdminMatchesPanel({
   const isPlayed = form.status === "played";
 
   return (
-    <section className="grid gap-6 xl:grid-cols-[1.1fr_0.9fr]">
-      <section className="rounded-3xl border border-[var(--border)] bg-[var(--card)] p-4 shadow-sm sm:p-5">
+    <section className="grid gap-6 xl:grid-cols-[minmax(0,1.1fr)_minmax(0,0.9fr)]">
+      <section className="min-w-0 rounded-3xl border border-[var(--border)] bg-[var(--card)] p-4 shadow-sm sm:p-5">
         <div className="mb-4 flex flex-col gap-1">
           <h2 className="text-lg font-semibold text-[var(--foreground)] sm:text-xl">
             {editingMatchId !== null ? "Editar partido" : "Cargar partido"}
           </h2>
-          <p className="text-sm text-[var(--muted)]">
-            {editingMatchId !== null
-              ? "Actualizá resultado, goles, goleadoras y fotos."
-              : "Agregá próximas fechas o resultados ya jugados."}
-          </p>
         </div>
 
         <form onSubmit={handleSubmit} className="grid gap-4">
-          <div className="grid gap-4 sm:grid-cols-2">
+          <div className="grid gap-4 md:grid-cols-2">
             <Field
               label="Número de fecha"
               value={form.roundNumber}
@@ -230,7 +223,7 @@ export default function AdminMatchesPanel({
             />
           </div>
 
-          <div className="grid gap-4 sm:grid-cols-3">
+          <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-[minmax(0,0.9fr)_minmax(0,0.9fr)_minmax(0,1.2fr)]">
             <Field
               label="Fecha"
               value={form.matchDate}
@@ -256,7 +249,7 @@ export default function AdminMatchesPanel({
             />
           </div>
 
-          <div className="grid gap-4 sm:grid-cols-2">
+          <div className="grid gap-4 md:grid-cols-2">
             <SelectField
               label="Estado"
               value={form.status}
@@ -283,7 +276,7 @@ export default function AdminMatchesPanel({
             />
           </div>
 
-          <div className="grid gap-4 sm:grid-cols-2">
+          <div className="grid gap-4 md:grid-cols-2">
             <Field
               label="Goles"
               value={form.ankaraGoals}
@@ -315,17 +308,17 @@ export default function AdminMatchesPanel({
             placeholder="https://drive.google.com/..."
           />
 
-          <div className="flex flex-wrap items-center gap-3 pt-2">
+          <div className="flex flex-col gap-3 pt-2 sm:flex-row sm:flex-wrap sm:items-center">
             <button
               type="submit"
               disabled={saving}
               className="inline-flex items-center justify-center rounded-xl bg-[var(--ankara-blue)] px-4 py-3 text-sm font-medium text-white transition hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-60 dark:bg-[var(--ankara-mint)] dark:text-[var(--ankara-blue)]"
             >
               {saving
-              ? "Guardando..."
-              : editingMatchId !== null
-              ? "Guardar cambios"
-              : "Guardar partido"}
+                ? "Guardando..."
+                : editingMatchId !== null
+                ? "Guardar cambios"
+                : "Guardar partido"}
             </button>
 
             <button
@@ -349,13 +342,13 @@ export default function AdminMatchesPanel({
         </form>
       </section>
 
-      <section className="rounded-3xl border border-[var(--border)] bg-[var(--card)] p-4 shadow-sm sm:p-5">
+      <section className="min-w-0 rounded-3xl border border-[var(--border)] bg-[var(--card)] p-4 shadow-sm sm:p-5">
         <div className="mb-4 flex flex-col gap-1">
           <h2 className="text-lg font-semibold text-[var(--foreground)] sm:text-xl">
             Fixture cargado
           </h2>
           <p className="text-sm text-[var(--muted)]">
-            Vista rápida de las fechas guardadas.
+            Vista de las fechas guardadas.
           </p>
         </div>
 
@@ -365,15 +358,15 @@ export default function AdminMatchesPanel({
               key={match.id}
               className="rounded-2xl border border-[var(--border)] bg-[var(--surface-soft)] p-4"
             >
-              <div className="flex items-start justify-between gap-3">
-                <div>
+              <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+                <div className="min-w-0">
                   <p className="text-sm font-medium text-[var(--muted)]">
                     Fecha {match.roundNumber}
                   </p>
                   <h3 className="text-base font-semibold text-[var(--foreground)]">
                     Ankara vs {match.opponent}
                   </h3>
-                  <p className="mt-1 text-sm text-[var(--muted)]">
+                  <p className="mt-1 break-words text-sm text-[var(--muted)]">
                     {match.matchDate} · {match.matchTime.slice(0, 5)} hs · {match.fieldLabel}
                   </p>
                   <p className="mt-1 text-sm text-[var(--muted)]">
@@ -381,24 +374,25 @@ export default function AdminMatchesPanel({
                   </p>
                 </div>
 
-                <span
-                  className={`rounded-full px-3 py-1 text-xs font-semibold ${
-                    match.status === "played"
-                      ? "bg-[rgba(34,197,94,0.10)] text-green-700 dark:text-green-400"
-                      : "bg-[var(--surface-blue)] text-[var(--ankara-blue)] dark:text-[var(--ankara-mint)]"
-                  }`}
-                >
-                  {match.status === "played" ? "Jugado" : "Próximo"}
-                </span>
-                <div className="mt-3 flex flex-wrap items-center gap-2">
-                <button
-                  type="button"
-                  onClick={() => handleEditMatch(match)}
-                  className="inline-flex items-center justify-center rounded-xl border border-[var(--border)] bg-[var(--card)] px-3 py-2 text-sm font-medium text-[var(--foreground)] transition hover:bg-[var(--surface-soft)]"
-                >
-                  Editar
-                </button>
-              </div>
+                <div className="flex shrink-0 flex-wrap items-center gap-2">
+                  <span
+                    className={`rounded-full px-3 py-1 text-xs font-semibold ${
+                      match.status === "played"
+                        ? "bg-[rgba(34,197,94,0.10)] text-green-700 dark:text-green-400"
+                        : "bg-[var(--surface-blue)] text-[var(--ankara-blue)] dark:text-[var(--ankara-mint)]"
+                    }`}
+                  >
+                    {match.status === "played" ? "Jugado" : "Próximo"}
+                  </span>
+
+                  <button
+                    type="button"
+                    onClick={() => handleEditMatch(match)}
+                    className="inline-flex items-center justify-center rounded-xl border border-[var(--border)] bg-[var(--card)] px-3 py-2 text-sm font-medium text-[var(--foreground)] transition hover:bg-[var(--surface-soft)]"
+                  >
+                    Editar
+                  </button>
+                </div>
               </div>
             </article>
           ))}
@@ -428,7 +422,7 @@ function Field({
   disabled,
 }: FieldProps) {
   return (
-    <label className="grid gap-2">
+    <label className="grid min-w-0 gap-2">
       <span className="text-sm font-medium text-[var(--foreground)]">{label}</span>
       <input
         type={type}
@@ -437,7 +431,7 @@ function Field({
         placeholder={placeholder}
         required={required}
         disabled={disabled}
-        className="h-11 rounded-xl border border-[var(--border)] bg-[var(--background)] px-3 text-sm text-[var(--foreground)] outline-none transition placeholder:text-[var(--muted)] focus:border-[var(--ankara-mint)] disabled:cursor-not-allowed disabled:opacity-60"
+        className="h-11 w-full min-w-0 rounded-xl border border-[var(--border)] bg-[var(--background)] px-3 text-sm text-[var(--foreground)] outline-none transition placeholder:text-[var(--muted)] focus:border-[var(--ankara-mint)] disabled:cursor-not-allowed disabled:opacity-60"
       />
     </label>
   );
@@ -459,13 +453,13 @@ function SelectField({
   disabled,
 }: SelectFieldProps) {
   return (
-    <label className="grid gap-2">
+    <label className="grid min-w-0 gap-2">
       <span className="text-sm font-medium text-[var(--foreground)]">{label}</span>
       <select
         value={value}
         onChange={(event) => onChange(event.target.value)}
         disabled={disabled}
-        className="h-11 rounded-xl border border-[var(--border)] bg-[var(--background)] px-3 text-sm text-[var(--foreground)] outline-none transition focus:border-[var(--ankara-mint)] disabled:cursor-not-allowed disabled:opacity-60"
+        className="h-11 w-full min-w-0 rounded-xl border border-[var(--border)] bg-[var(--background)] px-3 text-sm text-[var(--foreground)] outline-none transition focus:border-[var(--ankara-mint)] disabled:cursor-not-allowed disabled:opacity-60"
       >
         {options.map((option) => (
           <option key={option.value} value={option.value}>

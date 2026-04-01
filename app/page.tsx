@@ -21,8 +21,6 @@ import {
 } from "@/lib/field-helpers";
 import PaymentStatusBadge from "@/components/payment-status-badge";
 import FullScreenLoader from "@/components/full-screen-loader";
-import FieldSummaryCard from "@/components/field-summary-card";
-import AppSectionNav from "@/components/app-section-nav";
 import Image from "next/image";
 import {
   FieldEvent,
@@ -41,8 +39,8 @@ import {
   PlayerRow,
 } from "@/types/database";
 import CopyAliasButton from "@/components/copy-alias-button";
-import PageModeSwitch from "@/components/page-mode-switch";
 import ThemeToggle from "@/components/theme-toggle";
+import AppSectionNav from "@/components/app-section-nav";
 
 export default function Home() {
   const [players, setPlayers] = useState<Player[]>([]);
@@ -69,6 +67,7 @@ export default function Home() {
         .single();
 
       if (playersResponse.error) console.error(playersResponse.error);
+
       if (monthResponse.error || !monthResponse.data) {
         console.error(monthResponse.error);
         setLoading(false);
@@ -139,16 +138,39 @@ export default function Home() {
     return <FullScreenLoader text="Cargando" />;
   }
 
+  const getSortableLastName = (fullName: string) => {
+  const parts = fullName.trim().split(/\s+/);
+  return parts.length > 1 ? parts[parts.length - 1].toLowerCase() : fullName.toLowerCase();
+};
+
+  const sortedPlayers = [...players].sort((a, b) => {
+    const lastNameA = getSortableLastName(a.name);
+    const lastNameB = getSortableLastName(b.name);
+
+    const compareLastName = lastNameA.localeCompare(lastNameB, "es", {
+      sensitivity: "base",
+    });
+
+    if (compareLastName !== 0) {
+      return compareLastName;
+    }
+
+    return a.name.localeCompare(b.name, "es", {
+      sensitivity: "base",
+    });
+  });
+
   const profesorCharge = getChargeByCode(monthCharges, "profesor");
   const totalFields = getTotalFieldAmount(fieldEvents);
   const totalFieldEvents = getTotalFieldEventsCount(fieldEvents);
   const totalMonth = (profesorCharge?.amount ?? 0) + totalFields;
+  const alias = profesorCharge?.alias ?? currentMonth.alias;
 
   return (
     <main className="min-h-screen bg-[var(--background)] text-[var(--foreground)]">
       <div className="mx-auto flex w-full max-w-7xl flex-col gap-6 px-4 py-6 sm:px-6 lg:px-8">
-        <header className="rounded-3xl border border-[var(--border)] bg-[var(--card)] p-4 shadow-sm sm:p-6">
-          <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+        <header className="rounded-3xl border border-[var(--border)] bg-[var(--card)] p-4 shadow-sm sm:p-5">
+          <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
             <div className="flex items-start gap-4">
               <div className="rounded-2xl border border-[var(--border)] bg-[var(--surface-soft)] p-2 shadow-sm">
                 <Image
@@ -160,19 +182,18 @@ export default function Home() {
                 />
               </div>
 
-              <div className="flex flex-col gap-3">
-                <span className="w-fit rounded-full bg-[var(--surface-mint)] px-3 py-1 text-xs font-semibold uppercase tracking-[0.18em] text-[var(--ankara-blue)] ring-1 ring-[var(--ring)] dark:text-[var(--ankara-mint)]">
+              <div className="space-y-1">
+                <span className="inline-flex w-fit rounded-full bg-[var(--surface-mint)] px-3 py-1 text-xs font-semibold uppercase tracking-[0.18em] text-[var(--ankara-blue)] ring-1 ring-[var(--ring)] dark:text-[var(--ankara-mint)]">
                   Público
                 </span>
 
-                <div className="space-y-1">
-                  <h1 className="text-3xl font-bold tracking-tight text-[var(--ankara-blue)] dark:text-white sm:text-4xl">
-                    Ankara
-                  </h1>
-                  <p className="text-sm text-[var(--muted)] sm:text-base">
-                    Estado mensual de pagos del equipo.
-                  </p>
-                </div>
+                <h1 className="text-2xl font-bold tracking-tight text-[var(--ankara-blue)] dark:text-white sm:text-3xl">
+                  Ankara
+                </h1>
+
+                <p className="text-sm text-[var(--muted)] sm:text-base">
+                  Estado mensual de pagos del equipo.
+                </p>
               </div>
             </div>
 
@@ -183,21 +204,24 @@ export default function Home() {
           </div>
         </header>
 
-        <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-           <CurrentMonthCard label={currentMonth.label} />
-          <ProfesorCard
+        <MonthlyOverviewCard
+          monthLabel={currentMonth.label}
+          totalMonth={totalMonth}
+          dueDate={currentMonth.dueDate}
+          alias={alias}
+        />
+
+        <section className="grid gap-4 md:grid-cols-2">
+          <ConceptSummaryCard
+            title="Entrenamiento"
             amount={profesorCharge?.amount ?? 0}
-            dueDate={currentMonth.dueDate}
-            alias={profesorCharge?.alias ?? currentMonth.alias}
+            description="Pago mensual cuota de entrenamiento."
           />
 
-          <FieldSummaryCard
+          <FieldConceptSummaryCard
             totalAmount={totalFields}
-            alias={currentMonth.alias}
-            fieldEvents={fieldEvents}
+            totalFieldEvents={totalFieldEvents}
           />
-
-          <TotalCard total={totalMonth} />
         </section>
 
         <section className="rounded-3xl border border-[var(--border)] bg-[var(--card)] p-4 shadow-sm sm:p-5">
@@ -206,53 +230,62 @@ export default function Home() {
               Estado de jugadoras
             </h2>
             <p className="text-sm text-[var(--muted)]">
-              Estado por concepto del mes actual.
+              Resumen del mes actual.
             </p>
           </div>
 
-          <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
-            {players.map((player) => {
-            const profesorPayment = getPaymentForPlayerAndCharge(
-              payments,
-              player.id,
-              profesorCharge?.id
-            );
+          <div className="overflow-hidden rounded-2xl border border-[var(--border)]">
+            <div className="hidden grid-cols-[minmax(0,1.4fr)_minmax(0,0.8fr)_minmax(0,1fr)] items-center gap-4 bg-[var(--surface-soft)] px-4 py-3 text-xs font-semibold uppercase tracking-[0.12em] text-[var(--muted)] md:grid">
+              <span>Jugadora</span>
+              <span>Entrenamiento</span>
+              <span>Canchas</span>
+            </div>
 
-            const paidFieldsCount = getPaidFieldEventsCountForPlayer(
-              fieldPayments,
-              player.id,
-              fieldEvents
-            );
+            <div className="divide-y divide-[var(--border)]">
+              {sortedPlayers.map((player) => {
+                const profesorPayment = getPaymentForPlayerAndCharge(
+                  payments,
+                  player.id,
+                  profesorCharge?.id
+                );
 
-            return (
-              <article
-                key={player.id}
-                className="rounded-3xl border border-[var(--border)] bg-[var(--card)] p-4 shadow-sm transition-transform duration-200 hover:-translate-y-0.5"
-              >
-                <h3 className="text-base font-semibold text-[var(--foreground)]">
-                  {player.name}
-                </h3>
+                const paidFieldsCount = getPaidFieldEventsCountForPlayer(
+                  fieldPayments,
+                  player.id,
+                  fieldEvents
+                );
 
-                <div className="mt-4 space-y-3">
-                  <div className="flex items-center justify-between gap-3">
-                    <span className="text-sm font-medium text-[var(--muted)]">
-                      Zurdo
-                    </span>
-                    <PaymentStatusBadge paid={profesorPayment?.paid ?? false} />
-                  </div>
+                return (
+                  <article
+                    key={player.id}
+                    className="grid gap-3 bg-[var(--card)] px-4 py-4 md:grid-cols-[minmax(0,1.4fr)_minmax(0,0.8fr)_minmax(0,1fr)] md:items-center md:gap-4"
+                  >
+                    <div>
+                      <p className="text-sm font-semibold text-[var(--foreground)] sm:text-base">
+                        {player.name}
+                      </p>
+                    </div>
 
-                  <div className="flex items-center justify-between gap-3">
-                    <span className="text-sm font-medium text-[var(--muted)]">
-                      Canchas
-                    </span>
-                    <span className="rounded-full bg-[var(--surface-blue)] px-3 py-1 text-xs font-semibold text-[var(--ankara-blue)] dark:text-[var(--ankara-mint)]">
-                      {paidFieldsCount}/{totalFieldEvents} pagadas
-                    </span>
-                  </div>
-                </div>
-              </article>
-            );
-          })}
+                    <div className="flex items-center justify-between gap-3 md:justify-start">
+                      <span className="text-xs font-medium uppercase tracking-[0.08em] text-[var(--muted)] md:hidden">
+                        Zurdo
+                      </span>
+                      <PaymentStatusBadge paid={profesorPayment?.paid ?? false} />
+                    </div>
+
+                    <div className="flex items-center justify-between gap-3 md:justify-start">
+                      <span className="text-xs font-medium uppercase tracking-[0.08em] text-[var(--muted)] md:hidden">
+                        Canchas
+                      </span>
+
+                      <span className="inline-flex w-fit rounded-full bg-[var(--surface-blue)] px-3 py-1 text-xs font-semibold text-[var(--ankara-blue)] dark:text-[var(--ankara-mint)]">
+                        {paidFieldsCount}/{totalFieldEvents} pagadas
+                      </span>
+                    </div>
+                  </article>
+                );
+              })}
+            </div>
           </div>
         </section>
       </div>
@@ -260,65 +293,104 @@ export default function Home() {
   );
 }
 
-type ProfesorCardProps = {
-  amount: number;
+type MonthlyOverviewCardProps = {
+  monthLabel: string;
+  totalMonth: number;
   dueDate: string;
   alias?: string;
 };
 
-const ProfesorCard = ({ amount, dueDate, alias }: ProfesorCardProps) => {
+const MonthlyOverviewCard = ({
+  monthLabel,
+  totalMonth,
+  dueDate,
+  alias,
+}: MonthlyOverviewCardProps) => {
   return (
-    <article className="rounded-3xl border border-[var(--border)] bg-[var(--card)] p-5 shadow-sm">
-      <p className="text-sm font-medium text-[var(--muted)]">Zurdo</p>
-      <p className="mt-2 text-3xl font-bold tracking-tight text-[var(--ankara-blue)] dark:text-white">
-        ${amount.toLocaleString("es-AR")}
-      </p>
+    <section className="overflow-hidden rounded-3xl border border-[var(--border)] bg-[var(--card)] shadow-sm">
+      <div className="grid gap-6 p-5 sm:p-6 lg:grid-cols-[minmax(0,1.2fr)_minmax(0,0.8fr)] lg:items-center">
+        <div className="space-y-4">
+          <div className="flex flex-wrap items-center gap-3">
+            <span className="rounded-full bg-[var(--surface-mint)] px-3 py-1 text-xs font-semibold uppercase tracking-[0.14em] text-[var(--ankara-blue)] ring-1 ring-[var(--ring)] dark:text-[var(--ankara-mint)]">
+              Mes activo
+            </span>
 
-      <div className="mt-4 space-y-2 text-sm text-[var(--muted)]">
-        <p>Vence: {dueDate}</p>
-        <div>
-          <p className="mb-2">Alias</p>
-          {alias ? <CopyAliasButton alias={alias} /> : <p>-</p>}
-        </div>
-      </div>
-    </article>
-  );
-};
+            <span className="text-sm font-medium text-[var(--muted)]">
+              {monthLabel}
+            </span>
+          </div>
 
-type TotalCardProps = {
-  total: number;
-};
+          <div>
+            <p className="text-sm font-medium text-[var(--muted)]">
+              Total del mes
+            </p>
+            <p className="mt-2 text-3xl font-bold tracking-tight text-[var(--ankara-blue)] dark:text-white sm:text-4xl">
+              ${totalMonth.toLocaleString("es-AR")}
+            </p>
+          </div>
 
-const TotalCard = ({ total }: TotalCardProps) => {
-  return (
-    <article className="rounded-3xl border border-[var(--border)] bg-[var(--surface-soft)] p-5 shadow-sm">
-      <p className="text-sm font-medium text-[var(--muted)]">Total del mes</p>
-      <p className="mt-2 text-3xl font-bold tracking-tight text-[var(--ankara-blue)] dark:text-white">
-        ${total.toLocaleString("es-AR")}
-      </p>
-    </article>
-  );
-};
-
-type CurrentMonthCardProps = {
-  label: string;
-};
-
-const CurrentMonthCard = ({ label }: CurrentMonthCardProps) => {
-  return (
-    <article className="rounded-3xl border border-[var(--border)] bg-[var(--surface-mint)] p-5 shadow-sm">
-      <div className="flex items-start justify-between gap-3">
-        <div>
-          <p className="text-sm font-medium text-[var(--muted)]">Mes actual</p>
-          <p className="mt-2 text-3xl font-bold tracking-tight text-[var(--ankara-blue)] dark:text-white">
-            {label}
+          <p className="text-sm text-[var(--muted)] sm:text-base">
+            Vence: <span className="font-semibold text-[var(--foreground)]">{dueDate}</span>
           </p>
         </div>
 
-        <span className="rounded-full bg-[var(--card)] px-3 py-1 text-xs font-semibold uppercase tracking-[0.12em] text-[var(--ankara-blue)] ring-1 ring-[var(--ring)] dark:text-[var(--ankara-mint)]">
-          Activo
-        </span>
+        <div className="rounded-2xl border border-[var(--border)] bg-[var(--surface-soft)] p-4 sm:p-5">
+          <p className="text-sm font-medium text-[var(--muted)]">Alias para pagar</p>
+
+          <div className="mt-3 space-y-3">
+            <p className="break-all text-base font-semibold text-[var(--foreground)]">
+              {alias || "-"}
+            </p>
+
+            {alias ? <CopyAliasButton alias={alias} /> : null}
+          </div>
+        </div>
       </div>
+    </section>
+  );
+};
+
+type ConceptSummaryCardProps = {
+  title: string;
+  amount: number;
+  description: string;
+};
+
+const ConceptSummaryCard = ({
+  title,
+  amount,
+  description,
+}: ConceptSummaryCardProps) => {
+  return (
+    <article className="rounded-3xl border border-[var(--border)] bg-[var(--card)] p-5 shadow-sm">
+      <p className="text-sm font-medium text-[var(--muted)]">{title}</p>
+      <p className="mt-2 text-3xl font-bold tracking-tight text-[var(--ankara-blue)] dark:text-white">
+        ${amount.toLocaleString("es-AR")}
+      </p>
+      <p className="mt-3 text-sm text-[var(--muted)]">{description}</p>
+    </article>
+  );
+};
+
+type FieldConceptSummaryCardProps = {
+  totalAmount: number;
+  totalFieldEvents: number;
+};
+
+const FieldConceptSummaryCard = ({
+  totalAmount,
+  totalFieldEvents,
+}: FieldConceptSummaryCardProps) => {
+  return (
+    <article className="rounded-3xl border border-[var(--border)] bg-[var(--surface-soft)] p-5 shadow-sm">
+      <p className="text-sm font-medium text-[var(--muted)]">Canchas</p>
+      <p className="mt-2 text-3xl font-bold tracking-tight text-[var(--ankara-blue)] dark:text-white">
+        ${totalAmount.toLocaleString("es-AR")}
+      </p>
+      <p className="mt-3 text-sm text-[var(--muted)]">
+        {totalFieldEvents} {totalFieldEvents === 1 ? "fecha" : "fechas"} en el
+        mes.
+      </p>
     </article>
   );
 };

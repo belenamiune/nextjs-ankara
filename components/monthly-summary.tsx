@@ -13,7 +13,7 @@ const MonthlySummary = ({ month, totalFieldEvents }: MonthlySummaryProps) => {
           Resumen del mes
         </h2>
         <p className="text-sm text-[var(--muted)]">
-          Datos principales para compartir y administrar el cobro.
+          Datos para administrar el cobro.
         </p>
       </div>
 

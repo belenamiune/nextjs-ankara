@@ -37,7 +37,7 @@ const ReminderMessageBox = ({ message }: ReminderMessageBoxProps) => {
             Recordatorio automático
           </h2>
           <p className="mt-1 text-sm text-[var(--muted)]">
-            Texto listo para copiar y enviar al grupo o por mensaje privado.
+            Texto listo para copiar y enviar al grupo.
           </p>
         </div>
 

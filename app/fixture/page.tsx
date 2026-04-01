@@ -79,7 +79,7 @@ export default function FixturePage() {
                     Torneo Apertura Septen 2026
                   </h1>
                   <p className="text-sm text-[var(--muted)] sm:text-base">
-                    Zona B · Resultados, próximas fechas y fotos del equipo.
+                    Zona B · Resultados, próximas fechas y fotos.
                   </p>
                 </div>
               </div>

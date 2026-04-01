@@ -15,15 +15,14 @@ import {
   PlayerRow,
 } from "@/types/database";
 
-export function adaptPlayer(row: PlayerRow): Player {
-  return {
-    id: row.id,
-    name: row.name,
-    phone: row.phone,
-    email: row.email,
-    active: row.active,
-  };
-}
+export const adaptPlayer = (row: PlayerRow): Player => ({
+  id: row.id,
+  name: row.name,
+  nickname: row.nickname ?? undefined,
+  email: row.email ?? undefined,
+  birthDate: row.birth_date ?? undefined,
+  active: row.active,
+});
 
 export function adaptMonth(row: MonthRow): MonthConfig {
   return {
