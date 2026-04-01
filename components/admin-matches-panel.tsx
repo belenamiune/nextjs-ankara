@@ -43,6 +43,7 @@ export default function AdminMatchesPanel({
   const [form, setForm] = useState<FormState>(initialFormState);
   const [saving, setSaving] = useState(false);
   const [feedback, setFeedback] = useState<"success" | "error" | null>(null);
+  const [editingMatchId, setEditingMatchId] = useState<number | null>(null);
 
   const sortedMatches = useMemo(() => {
     return [...matches].sort((a, b) => a.roundNumber - b.roundNumber);
@@ -60,6 +61,8 @@ export default function AdminMatchesPanel({
 
   const resetForm = () => {
     setForm(initialFormState);
+    setEditingMatchId(null);
+    setFeedback(null);
   };
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
@@ -96,6 +99,47 @@ export default function AdminMatchesPanel({
       active: true,
     };
 
+    if (editingMatchId !== null) {
+      const { data, error } = await supabase
+        .from("matches")
+        .update(payload)
+        .eq("id", editingMatchId)
+        .select("*")
+        .single();
+
+      if (error || !data) {
+        console.error(error);
+        setSaving(false);
+        setFeedback("error");
+        return;
+      }
+
+      const updatedMatch: Match = {
+        id: data.id,
+        roundNumber: data.round_number,
+        opponent: data.opponent,
+        matchDate: data.match_date,
+        matchTime: data.match_time,
+        fieldLabel: data.field_label,
+        status: data.status,
+        result: data.result ?? undefined,
+        ankaraGoals: data.ankara_goals ?? undefined,
+        opponentGoals: data.opponent_goals ?? undefined,
+        scorers: data.scorers ?? [],
+        photosUrl: data.photos_url ?? undefined,
+        active: data.active,
+      };
+
+      setMatches((prev) =>
+        prev.map((match) => (match.id === editingMatchId ? updatedMatch : match))
+      );
+
+      setSaving(false);
+      setFeedback("success");
+      resetForm();
+      return;
+    }
+
     const { data, error } = await supabase
       .from("matches")
       .insert(payload)
@@ -129,10 +173,27 @@ export default function AdminMatchesPanel({
     setSaving(false);
     setFeedback("success");
     resetForm();
+  };
 
-    setTimeout(() => {
-      setFeedback((current) => (current === "success" ? null : current));
-    }, 2500);
+    const handleEditMatch = (match: Match) => {
+    setEditingMatchId(match.id);
+    setFeedback(null);
+
+    setForm({
+      roundNumber: String(match.roundNumber),
+      opponent: match.opponent,
+      matchDate: match.matchDate,
+      matchTime: match.matchTime.slice(0, 5),
+      fieldLabel: match.fieldLabel,
+      status: match.status,
+      result: match.result ?? "",
+      ankaraGoals:
+        typeof match.ankaraGoals === "number" ? String(match.ankaraGoals) : "",
+      opponentGoals:
+        typeof match.opponentGoals === "number" ? String(match.opponentGoals) : "",
+      scorers: match.scorers.join(", "),
+      photosUrl: match.photosUrl ?? "",
+    });
   };
 
   const isPlayed = form.status === "played";
@@ -142,10 +203,12 @@ export default function AdminMatchesPanel({
       <section className="rounded-3xl border border-[var(--border)] bg-[var(--card)] p-4 shadow-sm sm:p-5">
         <div className="mb-4 flex flex-col gap-1">
           <h2 className="text-lg font-semibold text-[var(--foreground)] sm:text-xl">
-            Cargar partido
+            {editingMatchId !== null ? "Editar partido" : "Cargar partido"}
           </h2>
           <p className="text-sm text-[var(--muted)]">
-            Agregá próximas fechas o resultados ya jugados.
+            {editingMatchId !== null
+              ? "Actualizá resultado, goles, goleadoras y fotos."
+              : "Agregá próximas fechas o resultados ya jugados."}
           </p>
         </div>
 
@@ -242,7 +305,6 @@ export default function AdminMatchesPanel({
             label="Goleadoras"
             value={form.scorers}
             onChange={(value) => handleChange("scorers", value)}
-            placeholder="Ej: Belu Amiune x2, Fiorella Acosta, Anita Minatti"
             disabled={!isPlayed}
           />
 
@@ -259,7 +321,11 @@ export default function AdminMatchesPanel({
               disabled={saving}
               className="inline-flex items-center justify-center rounded-xl bg-[var(--ankara-blue)] px-4 py-3 text-sm font-medium text-white transition hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-60 dark:bg-[var(--ankara-mint)] dark:text-[var(--ankara-blue)]"
             >
-              {saving ? "Guardando..." : "Guardar partido"}
+              {saving
+              ? "Guardando..."
+              : editingMatchId !== null
+              ? "Guardar cambios"
+              : "Guardar partido"}
             </button>
 
             <button
@@ -310,6 +376,9 @@ export default function AdminMatchesPanel({
                   <p className="mt-1 text-sm text-[var(--muted)]">
                     {match.matchDate} · {match.matchTime.slice(0, 5)} hs · {match.fieldLabel}
                   </p>
+                  <p className="mt-1 text-sm text-[var(--muted)]">
+                    {match.photosUrl ? "Fotos cargadas" : "Sin link de fotos"}
+                  </p>
                 </div>
 
                 <span
@@ -321,6 +390,15 @@ export default function AdminMatchesPanel({
                 >
                   {match.status === "played" ? "Jugado" : "Próximo"}
                 </span>
+                <div className="mt-3 flex flex-wrap items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => handleEditMatch(match)}
+                  className="inline-flex items-center justify-center rounded-xl border border-[var(--border)] bg-[var(--card)] px-3 py-2 text-sm font-medium text-[var(--foreground)] transition hover:bg-[var(--surface-soft)]"
+                >
+                  Editar
+                </button>
+              </div>
               </div>
             </article>
           ))}

@@ -34,6 +34,9 @@ import ThemeToggle from "@/components/theme-toggle";
 import AdminMatchesPanel from "@/components/admin-matches-panel";
 import { adaptMatch } from "@/lib/match-adapter";
 import { Match } from "@/types/match";
+import { AgendaMatch, AgendaPlayer, PlayerAbsence } from "@/types/agenda";
+import { adaptAgendaMatch, adaptAgendaPlayer, adaptPlayerAbsence } from "@/lib/agenda-adapters";
+import AdminAbsencesPanel from "@/components/admin-absences-panel";
 
 export default function AdminPage() {
   const [players, setPlayers] = useState<Player[]>([]);
@@ -43,7 +46,10 @@ export default function AdminPage() {
   const [fieldEvents, setFieldEvents] = useState<FieldEvent[]>([]);
   const [fieldPayments, setFieldPayments] = useState<FieldPayment[]>([]);
   const [loading, setLoading] = useState(true);
-   const [matches, setMatches] = useState<Match[]>([]);
+  const [matches, setMatches] = useState<Match[]>([]);
+  const [agendaPlayers, setAgendaPlayers] = useState<AgendaPlayer[]>([]);
+  const [agendaMatches, setAgendaMatches] = useState<AgendaMatch[]>([]);
+  const [playerAbsences, setPlayerAbsences] = useState<PlayerAbsence[]>([]);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -58,6 +64,30 @@ export default function AdminPage() {
       if (matchesResponse.error) console.error(matchesResponse.error);
 
       setMatches((matchesResponse.data ?? []).map(adaptMatch));
+
+      const agendaPlayersResponse = await supabase
+        .from("players")
+        .select("id, name, nickname, email, birth_date, active")
+        .eq("active", true)
+        .order("id", { ascending: true });
+
+      const agendaMatchesResponse = await supabase
+        .from("matches")
+        .select("id, round_number, opponent, match_date, match_time, field_label, status, active")
+        .eq("active", true)
+        .order("match_date", { ascending: true });
+
+      const playerAbsencesResponse = await supabase
+        .from("player_absences")
+        .select("id, player_id, match_id, reason");
+
+      if (agendaPlayersResponse.error) console.error(agendaPlayersResponse.error);
+      if (agendaMatchesResponse.error) console.error(agendaMatchesResponse.error);
+      if (playerAbsencesResponse.error) console.error(playerAbsencesResponse.error);
+
+      setAgendaPlayers((agendaPlayersResponse.data ?? []).map(adaptAgendaPlayer));
+      setAgendaMatches((agendaMatchesResponse.data ?? []).map(adaptAgendaMatch));
+      setPlayerAbsences((playerAbsencesResponse.data ?? []).map(adaptPlayerAbsence));
 
       const playersResponse = await supabase
         .from("players")
@@ -189,6 +219,12 @@ export default function AdminPage() {
           initialFieldPayments={fieldPayments}
         />
         <AdminMatchesPanel initialMatches={matches} />
+
+        <AdminAbsencesPanel
+          players={agendaPlayers}
+          matches={agendaMatches}
+          initialAbsences={playerAbsences}
+        />
       </div>
     </main>
   );
