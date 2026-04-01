@@ -31,6 +31,9 @@ import {
 import FullScreenLoader from "@/components/full-screen-loader";
 import PageModeSwitch from "@/components/page-mode-switch";
 import ThemeToggle from "@/components/theme-toggle";
+import AdminMatchesPanel from "@/components/admin-matches-panel";
+import { adaptMatch } from "@/lib/match-adapter";
+import { Match } from "@/types/match";
 
 export default function AdminPage() {
   const [players, setPlayers] = useState<Player[]>([]);
@@ -40,10 +43,21 @@ export default function AdminPage() {
   const [fieldEvents, setFieldEvents] = useState<FieldEvent[]>([]);
   const [fieldPayments, setFieldPayments] = useState<FieldPayment[]>([]);
   const [loading, setLoading] = useState(true);
+   const [matches, setMatches] = useState<Match[]>([]);
 
   useEffect(() => {
     const fetchData = async () => {
       const supabase = createBrowserSupabaseClient();
+
+      const matchesResponse = await supabase
+        .from("matches")
+        .select("*")
+        .eq("active", true)
+        .order("round_number", { ascending: true });
+
+      if (matchesResponse.error) console.error(matchesResponse.error);
+
+      setMatches((matchesResponse.data ?? []).map(adaptMatch));
 
       const playersResponse = await supabase
         .from("players")
@@ -153,7 +167,7 @@ export default function AdminPage() {
                     Panel admin Ankara
                   </h1>
                   <p className="text-sm text-[var(--muted)] sm:text-base">
-                    Gestioná pagos, canchas y estado general del equipo.
+                    Gestión de pagos, canchas y estado general del equipo.
                   </p>
                 </div>
               </div>
@@ -174,6 +188,7 @@ export default function AdminPage() {
           fieldEvents={fieldEvents}
           initialFieldPayments={fieldPayments}
         />
+        <AdminMatchesPanel initialMatches={matches} />
       </div>
     </main>
   );

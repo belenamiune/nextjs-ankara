@@ -78,7 +78,7 @@ const AdminPaymentsPanel = ({
 
   const handleToggleProfesor = async (playerId: number, monthChargeId: number) => {
     const supabase = createBrowserSupabaseClient();
-    const key = `profesor-${playerId}-${monthChargeId}`;
+    const key = `cuota-${playerId}-${monthChargeId}`;
 
     setSavingKey(key);
     setFeedbackKey(null);
@@ -219,7 +219,7 @@ const AdminPaymentsPanel = ({
       const parts = [];
 
       if (!profesorPayment?.paid) {
-        parts.push("profesor pendiente");
+        parts.push("cuota pendiente");
       }
 
       if (pendingFields.length > 0) {
@@ -239,7 +239,7 @@ const AdminPaymentsPanel = ({
 
   const reminderMessage =
     pendingPlayersLines.length > 0
-      ? `Hola chicas, les paso lo pendiente de ${month.label}:\n\n${pendingPlayersLines.join(
+      ? `Hola ankaritas, les paso lo pendiente de ${month.label}:\n\n${pendingPlayersLines.join(
           "\n"
         )}\n\nPor favor, cuando vayan pagando avísenme así lo actualizo. Gracias 💙`
       : `Todas las jugadoras están al día en ${month.label}. 💙`;

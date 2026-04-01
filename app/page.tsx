@@ -22,6 +22,7 @@ import {
 import PaymentStatusBadge from "@/components/payment-status-badge";
 import FullScreenLoader from "@/components/full-screen-loader";
 import FieldSummaryCard from "@/components/field-summary-card";
+import AppSectionNav from "@/components/app-section-nav";
 import Image from "next/image";
 import {
   FieldEvent,
@@ -177,7 +178,7 @@ export default function Home() {
 
             <div className="flex items-center gap-2 self-start">
               <ThemeToggle />
-              <PageModeSwitch href="/admin-access" label="Admin" dark />
+              <AppSectionNav />
             </div>
           </div>
         </header>
