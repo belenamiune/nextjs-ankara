@@ -22,11 +22,7 @@ export function generateReminderMessage({
       const pendingConcepts = monthCharges
         .filter((charge) => charge.active)
         .filter((charge) => {
-          const payment = getPaymentForPlayerAndCharge(
-            payments,
-            player.id,
-            charge.id
-          );
+          const payment = getPaymentForPlayerAndCharge(payments, player.id, charge.id);
 
           return !payment?.paid;
         })

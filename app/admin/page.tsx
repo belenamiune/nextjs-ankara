@@ -34,11 +34,7 @@ import ThemeToggle from "@/components/theme-toggle";
 import AdminMatchesPanel from "@/components/admin-matches-panel";
 import { adaptMatch } from "@/lib/match-adapter";
 import { Match } from "@/types/match";
-import {
-  AgendaMatch,
-  AgendaPlayer,
-  PlayerAbsence,
-} from "@/types/agenda";
+import { AgendaMatch, AgendaPlayer, PlayerAbsence } from "@/types/agenda";
 import {
   adaptAgendaMatch,
   adaptAgendaPlayer,
@@ -127,9 +123,7 @@ export default function AdminPage() {
 
       setAgendaPlayers((agendaPlayersResponse.data ?? []).map(adaptAgendaPlayer));
       setAgendaMatches((agendaMatchesResponse.data ?? []).map(adaptAgendaMatch));
-      setPlayerAbsences(
-        (playerAbsencesResponse.data ?? []).map(adaptPlayerAbsence)
-      );
+      setPlayerAbsences((playerAbsencesResponse.data ?? []).map(adaptPlayerAbsence));
 
       const playersResponse = await supabase
         .from("players")
@@ -211,9 +205,7 @@ export default function AdminPage() {
         ((fieldEventsResponse.data ?? []) as FieldEventRow[]).map(adaptFieldEvent)
       );
       setFieldPayments(
-        ((fieldPaymentsResponse.data ?? []) as FieldPaymentRow[]).map(
-          adaptFieldPayment
-        )
+        ((fieldPaymentsResponse.data ?? []) as FieldPaymentRow[]).map(adaptFieldPayment)
       );
 
       setLoading(false);
@@ -311,9 +303,7 @@ export default function AdminPage() {
         <section className="grid gap-6 lg:grid-cols-[260px_minmax(0,1fr)]">
           <aside className="rounded-3xl border border-[var(--border)] bg-[var(--card)] p-3 shadow-sm h-fit lg:sticky lg:top-6">
             <div className="mb-3 px-2 pt-2">
-              <p className="text-sm font-semibold text-[var(--foreground)]">
-                Secciones
-              </p>
+              <p className="text-sm font-semibold text-[var(--foreground)]">Secciones</p>
               <p className="mt-1 text-sm text-[var(--muted)]">
                 Seleccioná que querés administrar.
               </p>
@@ -352,10 +342,7 @@ export default function AdminPage() {
 
           <section className="min-w-0">
             {activeSection === "payments" && (
-              <PanelShell
-                title="Pagos"
-                description="Gestión de pagos."
-              >
+              <PanelShell title="Pagos" description="Gestión de pagos.">
                 <AdminPaymentsPanel
                   players={players}
                   initialPayments={payments}
@@ -368,10 +355,7 @@ export default function AdminPage() {
             )}
 
             {activeSection === "matches" && (
-              <PanelShell
-                title="Partidos"
-                description="Gestión de partidos."
-              >
+              <PanelShell title="Partidos" description="Gestión de partidos.">
                 <AdminMatchesPanel initialMatches={matches} />
               </PanelShell>
             )}

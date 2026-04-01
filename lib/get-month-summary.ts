@@ -7,11 +7,7 @@ type MonthSummaryParams = {
   monthCharges: MonthCharge[];
 };
 
-export function getMonthSummary({
-  players,
-  payments,
-  monthCharges,
-}: MonthSummaryParams) {
+export function getMonthSummary({ players, payments, monthCharges }: MonthSummaryParams) {
   const activePlayers = players.filter((player) => player.active);
   const activeCharges = monthCharges.filter((charge) => charge.active);
 

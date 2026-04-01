@@ -14,10 +14,7 @@ import {
   adaptPayment,
   adaptPlayer,
 } from "@/lib/adapters";
-import {
-  getChargeByCode,
-  getPaymentForPlayerAndCharge,
-} from "@/lib/charge-helpers";
+import { getChargeByCode, getPaymentForPlayerAndCharge } from "@/lib/charge-helpers";
 import {
   FieldEvent,
   FieldPayment,
@@ -58,9 +55,11 @@ export default function HistorialPage() {
   const [loading, setLoading] = useState(true);
   const [monthLoading, setMonthLoading] = useState(false);
 
-    const getSortableLastName = (fullName: string) => {
+  const getSortableLastName = (fullName: string) => {
     const parts = fullName.trim().split(/\s+/);
-    return parts.length > 1 ? parts[parts.length - 1].toLowerCase() : fullName.toLowerCase();
+    return parts.length > 1
+      ? parts[parts.length - 1].toLowerCase()
+      : fullName.toLowerCase();
   };
 
   useEffect(() => {
@@ -183,15 +182,14 @@ export default function HistorialPage() {
     const unpaidFieldEvents = fieldEvents.filter((event) => {
       const payment = fieldPayments.find(
         (fieldPayment) =>
-          fieldPayment.playerId === player.id &&
-          fieldPayment.fieldEventId === event.id
+          fieldPayment.playerId === player.id && fieldPayment.fieldEventId === event.id
       );
 
       return !payment?.paid;
     });
 
     const fieldDebt = unpaidFieldEvents.reduce((total, event) => total + event.amount, 0);
-    const profesorDebt = profesorPayment?.paid ? 0 : profesorCharge?.amount ?? 0;
+    const profesorDebt = profesorPayment?.paid ? 0 : (profesorCharge?.amount ?? 0);
 
     return {
       id: player.id,
@@ -207,21 +205,21 @@ export default function HistorialPage() {
   });
 
   const sortedPlayerSummaries = [...playerSummaries].sort((a, b) => {
-  const lastNameA = getSortableLastName(a.name);
-  const lastNameB = getSortableLastName(b.name);
+    const lastNameA = getSortableLastName(a.name);
+    const lastNameB = getSortableLastName(b.name);
 
-  const compareLastName = lastNameA.localeCompare(lastNameB, "es", {
-    sensitivity: "base",
+    const compareLastName = lastNameA.localeCompare(lastNameB, "es", {
+      sensitivity: "base",
+    });
+
+    if (compareLastName !== 0) {
+      return compareLastName;
+    }
+
+    return a.name.localeCompare(b.name, "es", {
+      sensitivity: "base",
+    });
   });
-
-  if (compareLastName !== 0) {
-    return compareLastName;
-  }
-
-  return a.name.localeCompare(b.name, "es", {
-    sensitivity: "base",
-  });
-});
 
   const expectedProfesorTotal = (profesorCharge?.amount ?? 0) * activePlayers.length;
   const expectedFieldsTotal = totalFieldsAmount * activePlayers.length;

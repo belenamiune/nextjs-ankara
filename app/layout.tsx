@@ -4,7 +4,7 @@ import { Providers } from "./providers";
 import Footer from "@/components/footer";
 
 export const metadata: Metadata = {
-  title: "Ankara"
+  title: "Ankara",
 };
 
 export default function RootLayout({

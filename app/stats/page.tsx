@@ -131,14 +131,8 @@ export default function StatsPage() {
         <section className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
           <SummaryCard label="Puntos" value={String(stats.points)} highlight />
           <SummaryCard label="Partidos jugados" value={String(stats.played)} />
-          <SummaryCard
-            label="Goles a favor"
-            value={String(stats.goalsFor)}
-          />
-          <SummaryCard
-            label="Diferencia de gol"
-            value={String(stats.goalDifference)}
-          />
+          <SummaryCard label="Goles a favor" value={String(stats.goalsFor)} />
+          <SummaryCard label="Diferencia de gol" value={String(stats.goalDifference)} />
         </section>
 
         <section className="grid gap-4 lg:grid-cols-2">
@@ -190,9 +184,7 @@ export default function StatsPage() {
               </div>
 
               <div className="rounded-2xl border border-[var(--border)] bg-[var(--surface-soft)] p-4">
-                <p className="text-sm font-medium text-[var(--muted)]">
-                  Próximo partido
-                </p>
+                <p className="text-sm font-medium text-[var(--muted)]">Próximo partido</p>
 
                 {nextMatch ? (
                   <div className="mt-2 space-y-1">
@@ -202,9 +194,7 @@ export default function StatsPage() {
                     <p className="text-sm text-[var(--muted)]">
                       {nextMatch.matchDate} · {nextMatch.matchTime.slice(0, 5)} hs
                     </p>
-                    <p className="text-sm text-[var(--muted)]">
-                      {nextMatch.fieldLabel}
-                    </p>
+                    <p className="text-sm text-[var(--muted)]">{nextMatch.fieldLabel}</p>
                   </div>
                 ) : (
                   <p className="mt-2 text-sm text-[var(--muted)]">
@@ -226,11 +216,7 @@ type SummaryCardProps = {
   highlight?: boolean;
 };
 
-function SummaryCard({
-  label,
-  value,
-  highlight = false,
-}: SummaryCardProps) {
+function SummaryCard({ label, value, highlight = false }: SummaryCardProps) {
   return (
     <article
       className={`rounded-3xl border p-5 shadow-sm ${
@@ -258,9 +244,7 @@ function StatItem({ label, value }: StatItemProps) {
       <p className="text-xs font-medium uppercase tracking-[0.12em] text-[var(--muted)]">
         {label}
       </p>
-      <p className="mt-2 text-2xl font-bold text-[var(--foreground)]">
-        {value}
-      </p>
+      <p className="mt-2 text-2xl font-bold text-[var(--foreground)]">{value}</p>
     </div>
   );
 }

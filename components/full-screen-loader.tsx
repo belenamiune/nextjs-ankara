@@ -4,9 +4,7 @@ type FullScreenLoaderProps = {
   text?: string;
 };
 
-export default function FullScreenLoader({
-  text = "Cargando",
-}: FullScreenLoaderProps) {
+export default function FullScreenLoader({ text = "Cargando" }: FullScreenLoaderProps) {
   return (
     <div className="flex min-h-screen items-center justify-center bg-[var(--background)] px-4">
       <div className="flex min-w-[240px] flex-col items-center rounded-3xl border border-[var(--border)] bg-[var(--card)] p-8 shadow-sm">

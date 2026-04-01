@@ -5,10 +5,7 @@ import MonthlySummary from "@/components/monthly-summary";
 import PaymentStatusBadge from "@/components/payment-status-badge";
 import ReminderMessageBox from "@/components/reminder-message-box";
 import { createBrowserSupabaseClient } from "@/lib/supabase/client";
-import {
-  getChargeByCode,
-  getPaymentForPlayerAndCharge,
-} from "@/lib/charge-helpers";
+import { getChargeByCode, getPaymentForPlayerAndCharge } from "@/lib/charge-helpers";
 import {
   getFieldPaymentForPlayer,
   getPaidFieldEventsCountForPlayer,
@@ -176,8 +173,7 @@ const AdminPaymentsPanel = ({
     setErrorKey(null);
 
     const currentPayment = fieldPaymentsState.find(
-      (payment) =>
-        payment.playerId === playerId && payment.fieldEventId === fieldEventId
+      (payment) => payment.playerId === playerId && payment.fieldEventId === fieldEventId
     );
 
     const currentEvent = fieldEvents.find((event) => event.id === fieldEventId);
@@ -239,11 +235,7 @@ const AdminPaymentsPanel = ({
       );
 
       const pendingFields = fieldEvents.filter((event) => {
-        const payment = getFieldPaymentForPlayer(
-          fieldPaymentsState,
-          player.id,
-          event.id
-        );
+        const payment = getFieldPaymentForPlayer(fieldPaymentsState, player.id, event.id);
         return !payment?.paid;
       });
 
@@ -279,7 +271,7 @@ const AdminPaymentsPanel = ({
     <section className="flex flex-col gap-6">
       <MonthlySummary month={month} totalFieldEvents={totalFieldEvents} />
 
-       <section className="grid gap-6">
+      <section className="grid gap-6">
         <div className="grid gap-4 md:grid-cols-3">
           <StatCard
             label="Zurdo"
@@ -380,12 +372,19 @@ const AdminPaymentsPanel = ({
 
                       <div className="mt-4">
                         <ActionButton
-                          label={profesorPayment?.paid ? "Desmarcar pago" : "Marcar como pago"}
-                          saving={savingKey === `cuota-${player.id}-${profesorCharge?.id}`}
-                          saved={feedbackKey === `cuota-${player.id}-${profesorCharge?.id}`}
+                          label={
+                            profesorPayment?.paid ? "Desmarcar pago" : "Marcar como pago"
+                          }
+                          saving={
+                            savingKey === `cuota-${player.id}-${profesorCharge?.id}`
+                          }
+                          saved={
+                            feedbackKey === `cuota-${player.id}-${profesorCharge?.id}`
+                          }
                           error={errorKey === `cuota-${player.id}-${profesorCharge?.id}`}
                           onClick={() =>
-                            profesorCharge && handleToggleProfesor(player.id, profesorCharge.id)
+                            profesorCharge &&
+                            handleToggleProfesor(player.id, profesorCharge.id)
                           }
                           active={!!profesorPayment?.paid}
                         />
@@ -423,7 +422,8 @@ const AdminPaymentsPanel = ({
                                     {event.label}
                                   </p>
                                   <p className="text-xs text-[var(--muted)]">
-                                    {event.eventDate} · ${event.amount.toLocaleString("es-AR")}
+                                    {event.eventDate} · $
+                                    {event.amount.toLocaleString("es-AR")}
                                   </p>
                                 </div>
 
@@ -432,7 +432,9 @@ const AdminPaymentsPanel = ({
 
                               <div className="mt-3">
                                 <ActionButton
-                                  label={payment?.paid ? "Desmarcar pago" : "Marcar como pago"}
+                                  label={
+                                    payment?.paid ? "Desmarcar pago" : "Marcar como pago"
+                                  }
                                   saving={savingKey === actionKey}
                                   saved={feedbackKey === actionKey}
                                   error={errorKey === actionKey}
@@ -454,10 +456,7 @@ const AdminPaymentsPanel = ({
       </section>
 
       <ReminderMessageBox
-        message={
-          reminderMessage ||
-          `Todas las jugadoras están al día en ${month.label}.`
-        }
+        message={reminderMessage || `Todas las jugadoras están al día en ${month.label}.`}
       />
     </section>
   );

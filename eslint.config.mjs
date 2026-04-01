@@ -13,6 +13,14 @@ const eslintConfig = defineConfig([
     "build/**",
     "next-env.d.ts",
   ]),
+  {
+    extends: ["next/core-web-vitals", "next/typescript", "prettier"],
+    plugins: ["simple-import-sort"],
+    rules: {
+      "simple-import-sort/imports": "warn",
+      "simple-import-sort/exports": "warn",
+    },
+  },
 ]);
 
 export default eslintConfig;

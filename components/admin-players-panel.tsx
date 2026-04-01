@@ -32,9 +32,7 @@ const emptyForm: FormState = {
   active: true,
 };
 
-export default function AdminPlayersPanel({
-  initialPlayers,
-}: AdminPlayersPanelProps) {
+export default function AdminPlayersPanel({ initialPlayers }: AdminPlayersPanelProps) {
   const [players, setPlayers] = useState<AdminPlayer[]>(initialPlayers);
   const [editingPlayerId, setEditingPlayerId] = useState<number | null>(null);
   const [form, setForm] = useState<FormState>(emptyForm);
@@ -201,86 +199,82 @@ export default function AdminPlayersPanel({
           </h2>
         </div>
 
-<form onSubmit={handleSubmit} className="grid gap-4">
-  <Field
-    label="Nombre completo"
-    value={form.name}
-    onChange={(value) => handleChange("name", value)}
-    required
-  />
+        <form onSubmit={handleSubmit} className="grid gap-4">
+          <Field
+            label="Nombre completo"
+            value={form.name}
+            onChange={(value) => handleChange("name", value)}
+            required
+          />
 
-  <div className="grid gap-4 sm:grid-cols-2">
-    <Field
-      label="Apodo"
-      value={form.nickname}
-      onChange={(value) => handleChange("nickname", value)}
-    />
+          <div className="grid gap-4 sm:grid-cols-2">
+            <Field
+              label="Apodo"
+              value={form.nickname}
+              onChange={(value) => handleChange("nickname", value)}
+            />
 
-    <Field
-      label="Mail"
-      value={form.email}
-      onChange={(value) => handleChange("email", value)}
-      type="email"
-    />
-  </div>
+            <Field
+              label="Mail"
+              value={form.email}
+              onChange={(value) => handleChange("email", value)}
+              type="email"
+            />
+          </div>
 
-  <div className="grid gap-4 sm:grid-cols-2">
-    <Field
-      label="Cumpleaños"
-      value={form.birthDate}
-      onChange={(value) => handleChange("birthDate", value)}
-      type="date"
-    />
+          <div className="grid gap-4 sm:grid-cols-2">
+            <Field
+              label="Cumpleaños"
+              value={form.birthDate}
+              onChange={(value) => handleChange("birthDate", value)}
+              type="date"
+            />
 
-    <label className="grid gap-2">
-      <span className="text-sm font-medium text-[var(--foreground)]">
-        Estado
-      </span>
-      <select
-        value={form.active ? "active" : "inactive"}
-        onChange={(event) =>
-          handleChange("active", event.target.value === "active")
-        }
-        className="h-11 rounded-xl border border-[var(--border)] bg-[var(--background)] px-3 text-sm text-[var(--foreground)] outline-none transition focus:border-[var(--ankara-mint)]"
-      >
-        <option value="active">Activa</option>
-        <option value="inactive">Inactiva</option>
-      </select>
-    </label>
-  </div>
+            <label className="grid gap-2">
+              <span className="text-sm font-medium text-[var(--foreground)]">Estado</span>
+              <select
+                value={form.active ? "active" : "inactive"}
+                onChange={(event) =>
+                  handleChange("active", event.target.value === "active")
+                }
+                className="h-11 rounded-xl border border-[var(--border)] bg-[var(--background)] px-3 text-sm text-[var(--foreground)] outline-none transition focus:border-[var(--ankara-mint)]"
+              >
+                <option value="active">Activa</option>
+                <option value="inactive">Inactiva</option>
+              </select>
+            </label>
+          </div>
 
-  <div className="flex flex-wrap items-center gap-3 pt-2">
-    <button
-      type="submit"
-      disabled={saving}
-      className="inline-flex items-center justify-center rounded-xl bg-[var(--ankara-blue)] px-4 py-3 text-sm font-medium text-white transition hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-60 dark:bg-[var(--ankara-mint)] dark:text-[var(--ankara-blue)]"
-    >
-      {saving
-        ? "Guardando..."
-        : editingPlayerId === null
-        ? "Crear jugadora"
-        : "Guardar cambios"}
-    </button>
+          <div className="flex flex-wrap items-center gap-3 pt-2">
+            <button
+              type="submit"
+              disabled={saving}
+              className="inline-flex items-center justify-center rounded-xl bg-[var(--ankara-blue)] px-4 py-3 text-sm font-medium text-white transition hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-60 dark:bg-[var(--ankara-mint)] dark:text-[var(--ankara-blue)]"
+            >
+              {saving
+                ? "Guardando..."
+                : editingPlayerId === null
+                  ? "Crear jugadora"
+                  : "Guardar cambios"}
+            </button>
 
-    <button
-      type="button"
-      onClick={resetForm}
-      className="inline-flex items-center justify-center rounded-xl border border-[var(--border)] bg-[var(--card)] px-4 py-3 text-sm font-medium text-[var(--foreground)] transition hover:bg-[var(--surface-soft)]"
-    >
-      {editingPlayerId === null ? "Limpiar" : "Cancelar"}
-    </button>
+            <button
+              type="button"
+              onClick={resetForm}
+              className="inline-flex items-center justify-center rounded-xl border border-[var(--border)] bg-[var(--card)] px-4 py-3 text-sm font-medium text-[var(--foreground)] transition hover:bg-[var(--surface-soft)]"
+            >
+              {editingPlayerId === null ? "Limpiar" : "Cancelar"}
+            </button>
 
-    {feedback === "success" && (
-      <p className="text-sm font-medium text-green-600">Guardado</p>
-    )}
+            {feedback === "success" && (
+              <p className="text-sm font-medium text-green-600">Guardado</p>
+            )}
 
-    {feedback === "error" && (
-      <p className="text-sm font-medium text-red-600">
-        Error al guardar
-      </p>
-    )}
-  </div>
-</form>
+            {feedback === "error" && (
+              <p className="text-sm font-medium text-red-600">Error al guardar</p>
+            )}
+          </div>
+        </form>
       </section>
 
       <section className="rounded-3xl border border-[var(--border)] bg-[var(--card)] p-4 shadow-sm sm:p-5">
@@ -338,8 +332,8 @@ export default function AdminPlayersPanel({
                     {toggleLoadingId === player.id
                       ? "Guardando..."
                       : player.active
-                      ? "Desactivar"
-                      : "Activar"}
+                        ? "Desactivar"
+                        : "Activar"}
                   </button>
                 </div>
               </div>
@@ -359,13 +353,7 @@ type FieldProps = {
   required?: boolean;
 };
 
-function Field({
-  label,
-  value,
-  onChange,
-  type = "text",
-  required,
-}: FieldProps) {
+function Field({ label, value, onChange, type = "text", required }: FieldProps) {
   return (
     <label className="grid gap-2">
       <span className="text-sm font-medium text-[var(--foreground)]">{label}</span>

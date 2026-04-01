@@ -23,9 +23,7 @@ export default function AdminAbsencesPanel({
 
   const upcomingMatches = matches.filter((match) => match.status === "upcoming");
 
-  const selectedMatch = matches.find(
-    (match) => String(match.id) === selectedMatchId
-  );
+  const selectedMatch = matches.find((match) => String(match.id) === selectedMatchId);
 
   const selectedAbsences = useMemo(() => {
     if (!selectedMatch) return [];
@@ -43,8 +41,7 @@ export default function AdminAbsencesPanel({
     setSavingPlayerId(playerId);
 
     const existingAbsence = absences.find(
-      (absence) =>
-        absence.playerId === playerId && absence.matchId === selectedMatch.id
+      (absence) => absence.playerId === playerId && absence.matchId === selectedMatch.id
     );
 
     if (existingAbsence) {
@@ -103,9 +100,7 @@ export default function AdminAbsencesPanel({
 
       <div className="grid gap-4">
         <label className="grid gap-2">
-          <span className="text-sm font-medium text-[var(--foreground)]">
-            Partido
-          </span>
+          <span className="text-sm font-medium text-[var(--foreground)]">Partido</span>
 
           <select
             value={selectedMatchId}
@@ -134,7 +129,6 @@ export default function AdminAbsencesPanel({
                     <p className="font-semibold text-[var(--foreground)]">
                       {player.nickname ?? player.name}
                     </p>
-                   
                   </div>
 
                   <button
@@ -150,8 +144,8 @@ export default function AdminAbsencesPanel({
                     {savingPlayerId === player.id
                       ? "Guardando..."
                       : absent
-                      ? "Ausente"
-                      : "Disponible"}
+                        ? "Ausente"
+                        : "Disponible"}
                   </button>
                 </div>
               </article>

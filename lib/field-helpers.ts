@@ -17,8 +17,7 @@ export function getFieldPaymentForPlayer(
   fieldEventId: number
 ) {
   return fieldPayments.find(
-    (payment) =>
-      payment.playerId === playerId && payment.fieldEventId === fieldEventId
+    (payment) => payment.playerId === playerId && payment.fieldEventId === fieldEventId
   );
 }
 

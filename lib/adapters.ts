@@ -29,7 +29,7 @@ export function adaptMonth(row: MonthRow): MonthConfig {
     id: row.id,
     label: row.label,
     dueDate: row.due_date,
-    alias: row.alias
+    alias: row.alias,
   };
 }
 

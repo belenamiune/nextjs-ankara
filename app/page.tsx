@@ -10,10 +10,7 @@ import {
   adaptPayment,
   adaptPlayer,
 } from "@/lib/adapters";
-import {
-  getChargeByCode,
-  getPaymentForPlayerAndCharge,
-} from "@/lib/charge-helpers";
+import { getChargeByCode, getPaymentForPlayerAndCharge } from "@/lib/charge-helpers";
 import {
   getPaidFieldEventsCountForPlayer,
   getTotalFieldAmount,
@@ -123,9 +120,7 @@ export default function Home() {
         ((fieldEventsResponse.data ?? []) as FieldEventRow[]).map(adaptFieldEvent)
       );
       setFieldPayments(
-        ((fieldPaymentsResponse.data ?? []) as FieldPaymentRow[]).map(
-          adaptFieldPayment
-        )
+        ((fieldPaymentsResponse.data ?? []) as FieldPaymentRow[]).map(adaptFieldPayment)
       );
 
       setLoading(false);
@@ -139,9 +134,11 @@ export default function Home() {
   }
 
   const getSortableLastName = (fullName: string) => {
-  const parts = fullName.trim().split(/\s+/);
-  return parts.length > 1 ? parts[parts.length - 1].toLowerCase() : fullName.toLowerCase();
-};
+    const parts = fullName.trim().split(/\s+/);
+    return parts.length > 1
+      ? parts[parts.length - 1].toLowerCase()
+      : fullName.toLowerCase();
+  };
 
   const sortedPlayers = [...players].sort((a, b) => {
     const lastNameA = getSortableLastName(a.name);
@@ -229,9 +226,7 @@ export default function Home() {
             <h2 className="text-lg font-semibold text-[var(--foreground)] sm:text-xl">
               Estado de jugadoras
             </h2>
-            <p className="text-sm text-[var(--muted)]">
-              Resumen del mes actual.
-            </p>
+            <p className="text-sm text-[var(--muted)]">Resumen del mes actual.</p>
           </div>
 
           <div className="overflow-hidden rounded-2xl border border-[var(--border)]">
@@ -315,22 +310,19 @@ const MonthlyOverviewCard = ({
               Mes activo
             </span>
 
-            <span className="text-sm font-medium text-[var(--muted)]">
-              {monthLabel}
-            </span>
+            <span className="text-sm font-medium text-[var(--muted)]">{monthLabel}</span>
           </div>
 
           <div>
-            <p className="text-sm font-medium text-[var(--muted)]">
-              Total del mes
-            </p>
+            <p className="text-sm font-medium text-[var(--muted)]">Total del mes</p>
             <p className="mt-2 text-3xl font-bold tracking-tight text-[var(--ankara-blue)] dark:text-white sm:text-4xl">
               ${totalMonth.toLocaleString("es-AR")}
             </p>
           </div>
 
           <p className="text-sm text-[var(--muted)] sm:text-base">
-            Vence: <span className="font-semibold text-[var(--foreground)]">{dueDate}</span>
+            Vence:{" "}
+            <span className="font-semibold text-[var(--foreground)]">{dueDate}</span>
           </p>
         </div>
 
@@ -356,11 +348,7 @@ type ConceptSummaryCardProps = {
   description: string;
 };
 
-const ConceptSummaryCard = ({
-  title,
-  amount,
-  description,
-}: ConceptSummaryCardProps) => {
+const ConceptSummaryCard = ({ title, amount, description }: ConceptSummaryCardProps) => {
   return (
     <article className="rounded-3xl border border-[var(--border)] bg-[var(--card)] p-5 shadow-sm">
       <p className="text-sm font-medium text-[var(--muted)]">{title}</p>
@@ -388,8 +376,7 @@ const FieldConceptSummaryCard = ({
         ${totalAmount.toLocaleString("es-AR")}
       </p>
       <p className="mt-3 text-sm text-[var(--muted)]">
-        {totalFieldEvents} {totalFieldEvents === 1 ? "fecha" : "fechas"} en el
-        mes.
+        {totalFieldEvents} {totalFieldEvents === 1 ? "fecha" : "fechas"} en el mes.
       </p>
     </article>
   );

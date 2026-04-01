@@ -36,9 +36,7 @@ const initialFormState: FormState = {
   photosUrl: "",
 };
 
-export default function AdminMatchesPanel({
-  initialMatches,
-}: AdminMatchesPanelProps) {
+export default function AdminMatchesPanel({ initialMatches }: AdminMatchesPanelProps) {
   const [matches, setMatches] = useState<Match[]>(initialMatches);
   const [form, setForm] = useState<FormState>(initialFormState);
   const [saving, setSaving] = useState(false);
@@ -88,8 +86,7 @@ export default function AdminMatchesPanel({
       field_label: form.fieldLabel.trim(),
       status: form.status,
       result: isPlayed ? form.result || null : null,
-      ankara_goals:
-        isPlayed && form.ankaraGoals !== "" ? Number(form.ankaraGoals) : null,
+      ankara_goals: isPlayed && form.ankaraGoals !== "" ? Number(form.ankaraGoals) : null,
       opponent_goals:
         isPlayed && form.opponentGoals !== "" ? Number(form.opponentGoals) : null,
       scorers: isPlayed ? scorersArray : [],
@@ -185,8 +182,7 @@ export default function AdminMatchesPanel({
       fieldLabel: match.fieldLabel,
       status: match.status,
       result: match.result ?? "",
-      ankaraGoals:
-        typeof match.ankaraGoals === "number" ? String(match.ankaraGoals) : "",
+      ankaraGoals: typeof match.ankaraGoals === "number" ? String(match.ankaraGoals) : "",
       opponentGoals:
         typeof match.opponentGoals === "number" ? String(match.opponentGoals) : "",
       scorers: match.scorers.join(", "),
@@ -253,9 +249,7 @@ export default function AdminMatchesPanel({
             <SelectField
               label="Estado"
               value={form.status}
-              onChange={(value) =>
-                handleChange("status", value as FormState["status"])
-              }
+              onChange={(value) => handleChange("status", value as FormState["status"])}
               options={[
                 { value: "upcoming", label: "Próximo partido" },
                 { value: "played", label: "Ya jugado" },
@@ -317,8 +311,8 @@ export default function AdminMatchesPanel({
               {saving
                 ? "Guardando..."
                 : editingMatchId !== null
-                ? "Guardar cambios"
-                : "Guardar partido"}
+                  ? "Guardar cambios"
+                  : "Guardar partido"}
             </button>
 
             <button
@@ -347,9 +341,7 @@ export default function AdminMatchesPanel({
           <h2 className="text-lg font-semibold text-[var(--foreground)] sm:text-xl">
             Fixture cargado
           </h2>
-          <p className="text-sm text-[var(--muted)]">
-            Vista de las fechas guardadas.
-          </p>
+          <p className="text-sm text-[var(--muted)]">Vista de las fechas guardadas.</p>
         </div>
 
         <div className="grid gap-3">
@@ -367,7 +359,8 @@ export default function AdminMatchesPanel({
                     Ankara vs {match.opponent}
                   </h3>
                   <p className="mt-1 break-words text-sm text-[var(--muted)]">
-                    {match.matchDate} · {match.matchTime.slice(0, 5)} hs · {match.fieldLabel}
+                    {match.matchDate} · {match.matchTime.slice(0, 5)} hs ·{" "}
+                    {match.fieldLabel}
                   </p>
                   <p className="mt-1 text-sm text-[var(--muted)]">
                     {match.photosUrl ? "Fotos cargadas" : "Sin link de fotos"}
@@ -445,13 +438,7 @@ type SelectFieldProps = {
   disabled?: boolean;
 };
 
-function SelectField({
-  label,
-  value,
-  onChange,
-  options,
-  disabled,
-}: SelectFieldProps) {
+function SelectField({ label, value, onChange, options, disabled }: SelectFieldProps) {
   return (
     <label className="grid min-w-0 gap-2">
       <span className="text-sm font-medium text-[var(--foreground)]">{label}</span>

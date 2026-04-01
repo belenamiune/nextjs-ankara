@@ -86,9 +86,7 @@ export default function AppSectionNav() {
               <h2 className="text-base font-semibold text-[var(--foreground)]">
                 Secciones
               </h2>
-              <p className="text-sm text-[var(--muted)]">
-                Elegí a dónde querés ir.
-              </p>
+              <p className="text-sm text-[var(--muted)]">Elegí a dónde querés ir.</p>
             </div>
 
             <div className="grid gap-2">

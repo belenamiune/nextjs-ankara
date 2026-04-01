@@ -1,9 +1,6 @@
 import { MonthCharge, Payment } from "@/types";
 
-export function getChargeByCode(
-  monthCharges: MonthCharge[],
-  code: string
-) {
+export function getChargeByCode(monthCharges: MonthCharge[], code: string) {
   return monthCharges.find((charge) => charge.conceptCode === code);
 }
 
@@ -15,9 +12,7 @@ export function getPaymentForPlayerAndCharge(
   if (!monthChargeId) return undefined;
 
   return payments.find(
-    (payment) =>
-      payment.playerId === playerId &&
-      payment.monthChargeId === monthChargeId
+    (payment) => payment.playerId === playerId && payment.monthChargeId === monthChargeId
   );
 }
 

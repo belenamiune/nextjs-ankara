@@ -32,13 +32,13 @@ export default function AgendaPage() {
 
         supabase
           .from("matches")
-          .select("id, round_number, opponent, match_date, match_time, field_label, status, active")
+          .select(
+            "id, round_number, opponent, match_date, match_time, field_label, status, active"
+          )
           .eq("active", true)
           .order("match_date", { ascending: true }),
 
-        supabase
-          .from("player_absences")
-          .select("id, player_id, match_id, reason"),
+        supabase.from("player_absences").select("id, player_id, match_id, reason"),
       ]);
 
       if (playersResponse.error) console.error(playersResponse.error);
@@ -91,9 +91,7 @@ export default function AgendaPage() {
           nextBirthday,
         };
       })
-      .sort(
-        (a, b) => a.nextBirthday.getTime() - b.nextBirthday.getTime()
-      );
+      .sort((a, b) => a.nextBirthday.getTime() - b.nextBirthday.getTime());
 
     return withBirthdayDate.slice(0, 5);
   }, [players]);
@@ -164,17 +162,13 @@ export default function AgendaPage() {
           </article>
 
           <article className="rounded-3xl border border-[var(--border)] bg-[var(--card)] p-5 shadow-sm">
-            <h2 className="text-lg font-semibold text-[var(--foreground)]">
-              Ausencias
-            </h2>
+            <h2 className="text-lg font-semibold text-[var(--foreground)]">Ausencias</h2>
 
             {nextMatch ? (
               absentPlayersForNextMatch.length > 0 ? (
                 <ul className="mt-4 space-y-2 text-sm text-[var(--muted)]">
                   {absentPlayersForNextMatch.map((player) => (
-                    <li key={player.id}>
-                      • {player.nickname ?? player.name}
-                    </li>
+                    <li key={player.id}>• {player.nickname ?? player.name}</li>
                   ))}
                 </ul>
               ) : (
