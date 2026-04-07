@@ -69,17 +69,17 @@ export default function AgendaPage() {
   }, [absences, nextMatch, players]);
 
   const upcomingBirthdays = useMemo(() => {
-    const today = new Date();
+  const today = new Date();
 
-    const withBirthdayDate = players
+  const withBirthdayDate = players
       .filter((player) => !!player.birthDate)
       .map((player) => {
-        const birthDate = new Date(player.birthDate as string);
+        const [year, month, day] = (player.birthDate as string).split("-").map(Number);
 
         const nextBirthday = new Date(
           today.getFullYear(),
-          birthDate.getMonth(),
-          birthDate.getDate()
+          month - 1,
+          day
         );
 
         if (nextBirthday < today) {
