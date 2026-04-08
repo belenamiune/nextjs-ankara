@@ -208,17 +208,17 @@ export default function JugadorasPage() {
   );
 
   const nextBirthdayPlayer = (() => {
-    const today = new Date();
+  const today = new Date();
 
-    const playersWithBirthday = activePlayers
+  const playersWithBirthday = activePlayers
       .filter((player) => !!player.birthDate)
       .map((player) => {
-        const birthDate = new Date(player.birthDate as string);
+        const [year, month, day] = String(player.birthDate).split("-").map(Number);
 
         const nextBirthday = new Date(
           today.getFullYear(),
-          birthDate.getMonth(),
-          birthDate.getDate()
+          month - 1,
+          day
         );
 
         if (nextBirthday < today) {
