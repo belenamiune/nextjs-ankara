@@ -15,9 +15,15 @@ export default function AdminAbsencesPanel({
   matches,
   initialAbsences,
 }: AdminAbsencesPanelProps) {
-  const [selectedMatchId, setSelectedMatchId] = useState<string>(
-    matches.find((match) => match.status === "upcoming")?.id?.toString() ?? ""
-  );
+    const sortedMatches = useMemo(() => {
+      return [...matches].sort((a, b) => a.roundNumber - b.roundNumber);
+    }, [matches]);
+
+    const [selectedMatchId, setSelectedMatchId] = useState<string>(
+      sortedMatches[0]?.id?.toString() ?? ""
+    );
+
+
   const [absences, setAbsences] = useState<PlayerAbsence[]>(initialAbsences);
   const [savingPlayerId, setSavingPlayerId] = useState<number | null>(null);
 
@@ -91,7 +97,7 @@ export default function AdminAbsencesPanel({
   };
 
   return (
-    <section className="rounded-3xl border border-[var(--border)] bg-[var(--card)] p-4 shadow-sm sm:p-5">
+    <section className="min-w-0 rounded-3xl border border-[var(--border)] bg-[var(--card)] p-4 shadow-sm sm:p-5">
       <div className="mb-4 flex flex-col gap-1">
         <h2 className="text-lg font-semibold text-[var(--foreground)] sm:text-xl">
           Ausencias
@@ -99,34 +105,34 @@ export default function AdminAbsencesPanel({
       </div>
 
       <div className="grid gap-4">
-        <label className="grid gap-2">
+        <label className="grid min-w-0 gap-2">
           <span className="text-sm font-medium text-[var(--foreground)]">Partido</span>
 
           <select
-            value={selectedMatchId}
-            onChange={(event) => setSelectedMatchId(event.target.value)}
-            className="h-11 rounded-xl border border-[var(--border)] bg-[var(--background)] px-3 text-sm text-[var(--foreground)] outline-none transition focus:border-[var(--ankara-mint)]"
-          >
-            {upcomingMatches.map((match) => (
-              <option key={match.id} value={match.id}>
-                Fecha {match.roundNumber} · {match.opponent} · {match.matchDate}
-              </option>
-            ))}
-          </select>
+              value={selectedMatchId}
+              onChange={(event) => setSelectedMatchId(event.target.value)}
+              className="h-11 w-full min-w-0 max-w-full rounded-xl border border-[var(--border)] bg-[var(--background)] px-3 text-sm text-[var(--foreground)] outline-none transition focus:border-[var(--ankara-mint)]"
+            >
+              {sortedMatches.map((match) => (
+                <option key={match.id} value={match.id}>
+                  Fecha {match.roundNumber} · {match.opponent} · {match.matchDate} ·{" "}
+                  {match.status === "played" ? "Jugado" : "Próximo"}
+                </option>))}
+            </select>
         </label>
 
-        <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
+        <div className="grid min-w-0 gap-3 sm:grid-cols-2 xl:grid-cols-3">
           {players.map((player) => {
             const absent = isPlayerAbsent(player.id);
 
             return (
-              <article
+             <article
                 key={player.id}
-                className="rounded-2xl border border-[var(--border)] bg-[var(--surface-soft)] p-4"
+                className="min-w-0 rounded-2xl border border-[var(--border)] bg-[var(--surface-soft)] p-4"
               >
-                <div className="flex items-center justify-between gap-3">
-                  <div>
-                    <p className="font-semibold text-[var(--foreground)]">
+                <div className="flex min-w-0 items-center justify-between gap-3">
+                  <div className="min-w-0">
+                    <p className="truncate font-semibold text-[var(--foreground)]">
                       {player.nickname ?? player.name}
                     </p>
                   </div>

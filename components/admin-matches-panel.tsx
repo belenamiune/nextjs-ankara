@@ -219,7 +219,7 @@ export default function AdminMatchesPanel({ initialMatches }: AdminMatchesPanelP
             />
           </div>
 
-          <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-[minmax(0,0.9fr)_minmax(0,0.9fr)_minmax(0,1.2fr)]">
+          <div className="grid min-w-0 gap-4 md:grid-cols-2 xl:grid-cols-[minmax(0,0.9fr)_minmax(0,0.9fr)_minmax(0,1.2fr)]">
             <Field
               label="Fecha"
               value={form.matchDate}
@@ -415,7 +415,7 @@ function Field({
   disabled,
 }: FieldProps) {
   return (
-    <label className="grid min-w-0 gap-2">
+    <label className="grid w-full min-w-0 gap-2">
       <span className="text-sm font-medium text-[var(--foreground)]">{label}</span>
       <input
         type={type}
@@ -424,7 +424,11 @@ function Field({
         placeholder={placeholder}
         required={required}
         disabled={disabled}
-        className="h-11 w-full min-w-0 rounded-xl border border-[var(--border)] bg-[var(--background)] px-3 text-sm text-[var(--foreground)] outline-none transition placeholder:text-[var(--muted)] focus:border-[var(--ankara-mint)] disabled:cursor-not-allowed disabled:opacity-60"
+        className={`h-11 w-full min-w-0 max-w-full rounded-xl border border-[var(--border)] bg-[var(--background)] px-3 text-sm text-[var(--foreground)] outline-none transition placeholder:text-[var(--muted)] focus:border-[var(--ankara-mint)] disabled:cursor-not-allowed disabled:opacity-60 ${
+          type === "date" || type === "time"
+            ? "[appearance:none] [-webkit-appearance:none]"
+            : ""
+        }`}
       />
     </label>
   );
