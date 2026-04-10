@@ -289,6 +289,7 @@ export default function HistorialPage() {
             <select
               value={selectedMonthId}
               onChange={(event) => setSelectedMonthId(event.target.value)}
+              disabled={monthLoading}
               className="h-11 rounded-xl border border-[var(--border)] bg-[var(--background)] px-3 text-sm text-[var(--foreground)] outline-none transition focus:border-[var(--ankara-mint)]"
             >
               {months.map((month) => (
@@ -300,74 +301,83 @@ export default function HistorialPage() {
           </label>
         </section>
 
-        {monthLoading || !selectedMonth ? (
-          <FullScreenLoader text="Cargando mes" />
-        ) : (
-          <>
-            <section className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-              <SummaryCard label="Mes" value={selectedMonth.label} />
-              <SummaryCard
-                label="Total esperado"
-                value={`$${expectedTotal.toLocaleString("es-AR")}`}
-              />
-              <SummaryCard
-                label="Recaudado"
-                value={`$${collectedTotal.toLocaleString("es-AR")}`}
-              />
-              <SummaryCard
-                label="Pendiente"
-                value={`$${pendingTotal.toLocaleString("es-AR")}`}
-                highlight
-              />
-            </section>
+{!selectedMonth ? (
+  <section className="rounded-3xl border border-[var(--border)] bg-[var(--card)] p-8 shadow-sm">
+    <p className="text-sm text-[var(--muted)]">No hay mes seleccionado.</p>
+  </section>
+) : monthLoading ? (
+  <section className="rounded-3xl border border-[var(--border)] bg-[var(--card)] p-8 shadow-sm">
+    <div className="flex min-h-[220px] flex-col items-center justify-center gap-4">
+      <div className="h-10 w-10 animate-spin rounded-full border-4 border-[var(--border)] border-t-[var(--ankara-blue)]" />
+      <p className="text-sm text-[var(--muted)]">Cargando información del mes...</p>
+    </div>
+  </section>
+) : (
+  <>
+    <section className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+      <SummaryCard label="Mes" value={selectedMonth.label} />
+      <SummaryCard
+        label="Total esperado"
+        value={`$${expectedTotal.toLocaleString("es-AR")}`}
+      />
+      <SummaryCard
+        label="Recaudado"
+        value={`$${collectedTotal.toLocaleString("es-AR")}`}
+      />
+      <SummaryCard
+        label="Pendiente"
+        value={`$${pendingTotal.toLocaleString("es-AR")}`}
+        highlight
+      />
+    </section>
 
-            <section className="rounded-3xl border border-[var(--border)] bg-[var(--card)] p-4 shadow-sm sm:p-5">
-              <div className="mb-4 flex flex-col gap-1">
-                <h2 className="text-lg font-semibold text-[var(--foreground)] sm:text-xl">
-                  Detalle por jugadora
-                </h2>
-                <p className="text-sm text-[var(--muted)]">
-                  Estado financiero de {selectedMonth.label}.
+      <section className="rounded-3xl border border-[var(--border)] bg-[var(--card)] p-4 shadow-sm sm:p-5">
+        <div className="mb-4 flex flex-col gap-1">
+          <h2 className="text-lg font-semibold text-[var(--foreground)] sm:text-xl">
+            Detalle por jugadora
+          </h2>
+          <p className="text-sm text-[var(--muted)]">
+            Estado financiero de {selectedMonth.label}.
+          </p>
+        </div>
+
+        <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+          {sortedPlayerSummaries.map((player) => (
+            <article
+              key={player.id}
+              className="rounded-3xl border border-[var(--border)] bg-[var(--card)] p-5 shadow-sm"
+            >
+              <h3 className="text-lg font-semibold text-[var(--foreground)]">
+                {player.nickname ?? player.name}
+              </h3>
+              <p className="text-sm text-[var(--muted)]">{player.name}</p>
+
+              <div className="mt-4 space-y-2 text-sm text-[var(--muted)]">
+                <p>
+                  <span className="font-medium text-[var(--foreground)]">
+                    Zurdo:
+                  </span>{" "}
+                  {player.profesorPaid ? "Pago" : "Pendiente"}
+                </p>
+                <p>
+                  <span className="font-medium text-[var(--foreground)]">
+                    Canchas:
+                  </span>{" "}
+                  {player.fieldPaidCount}/{player.totalFieldCount} pagadas
                 </p>
               </div>
 
-              <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
-                {sortedPlayerSummaries.map((player) => (
-                  <article
-                    key={player.id}
-                    className="rounded-3xl border border-[var(--border)] bg-[var(--card)] p-5 shadow-sm"
-                  >
-                    <h3 className="text-lg font-semibold text-[var(--foreground)]">
-                      {player.nickname ?? player.name}
-                    </h3>
-                    <p className="text-sm text-[var(--muted)]">{player.name}</p>
-
-                    <div className="mt-4 space-y-2 text-sm text-[var(--muted)]">
-                      <p>
-                        <span className="font-medium text-[var(--foreground)]">
-                          Zurdo:
-                        </span>{" "}
-                        {player.profesorPaid ? "Pago" : "Pendiente"}
-                      </p>
-                      <p>
-                        <span className="font-medium text-[var(--foreground)]">
-                          Canchas:
-                        </span>{" "}
-                        {player.fieldPaidCount}/{player.totalFieldCount} pagadas
-                      </p>
-                    </div>
-
-                    <div className="mt-5 grid gap-3 sm:grid-cols-3">
-                      <DebtCard label="Debe Zurdo" amount={player.profesorDebt} />
-                      <DebtCard label="Debe canchas" amount={player.fieldDebt} />
-                      <DebtCard label="Debe total" amount={player.totalDebt} highlight />
-                    </div>
-                  </article>
-                ))}
+              <div className="mt-5 grid gap-3 sm:grid-cols-3">
+                <DebtCard label="Debe Zurdo" amount={player.profesorDebt} />
+                <DebtCard label="Debe canchas" amount={player.fieldDebt} />
+                <DebtCard label="Debe total" amount={player.totalDebt} highlight />
               </div>
-            </section>
-          </>
-        )}
+            </article>
+          ))}
+        </div>
+      </section>
+    </>
+  )}
       </div>
     </main>
   );

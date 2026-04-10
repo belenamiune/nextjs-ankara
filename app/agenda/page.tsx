@@ -13,6 +13,14 @@ import {
 } from "@/lib/agenda-adapters";
 import { AgendaMatch, AgendaPlayer, PlayerAbsence } from "@/types/agenda";
 
+type AgendaMatchWithAbsences = AgendaMatch & {
+  absentPlayers: Array<
+    AgendaPlayer & {
+      reason?: string | null;
+    }
+  >;
+};
+
 export default function AgendaPage() {
   const [players, setPlayers] = useState<AgendaPlayer[]>([]);
   const [matches, setMatches] = useState<AgendaMatch[]>([]);
@@ -23,23 +31,26 @@ export default function AgendaPage() {
     const fetchAgendaData = async () => {
       const supabase = createBrowserSupabaseClient();
 
-      const [playersResponse, matchesResponse, absencesResponse] = await Promise.all([
-        supabase
-          .from("players")
-          .select("id, name, nickname, email, birth_date, active")
-          .eq("active", true)
-          .order("id", { ascending: true }),
+      const [playersResponse, matchesResponse, absencesResponse] =
+        await Promise.all([
+          supabase
+            .from("players")
+            .select("id, name, nickname, email, birth_date, active")
+            .eq("active", true)
+            .order("id", { ascending: true }),
 
-        supabase
-          .from("matches")
-          .select(
-            "id, round_number, opponent, match_date, match_time, field_label, status, active"
-          )
-          .eq("active", true)
-          .order("match_date", { ascending: true }),
+          supabase
+            .from("matches")
+            .select(
+              "id, round_number, opponent, match_date, match_time, field_label, status, active"
+            )
+            .eq("active", true)
+            .order("match_date", { ascending: true }),
 
-        supabase.from("player_absences").select("id, player_id, match_id, reason"),
-      ]);
+          supabase
+            .from("player_absences")
+            .select("id, player_id, match_id, reason"),
+        ]);
 
       if (playersResponse.error) console.error(playersResponse.error);
       if (matchesResponse.error) console.error(matchesResponse.error);
@@ -54,33 +65,40 @@ export default function AgendaPage() {
     fetchAgendaData();
   }, []);
 
-  const nextMatch = useMemo(() => {
-    return matches.find((match) => match.status === "upcoming");
-  }, [matches]);
+  const matchesWithAbsences = useMemo<AgendaMatchWithAbsences[]>(() => {
+    return matches.map((match) => {
+      const absentPlayers = absences
+        .filter((absence) => absence.matchId === match.id)
+        .map((absence) => {
+          const player = players.find((player) => player.id === absence.playerId);
 
-  const absentPlayersForNextMatch = useMemo(() => {
-    if (!nextMatch) return [];
+          if (!player) return null;
 
-    const absentPlayerIds = absences
-      .filter((absence) => absence.matchId === nextMatch.id)
-      .map((absence) => absence.playerId);
+          return {
+            ...player,
+            reason: absence.reason,
+          };
+        })
+        .filter(Boolean) as AgendaMatchWithAbsences["absentPlayers"];
 
-    return players.filter((player) => absentPlayerIds.includes(player.id));
-  }, [absences, nextMatch, players]);
+      return {
+        ...match,
+        absentPlayers,
+      };
+    });
+  }, [matches, absences, players]);
 
   const upcomingBirthdays = useMemo(() => {
-  const today = new Date();
+    const today = new Date();
 
-  const withBirthdayDate = players
+    const withBirthdayDate = players
       .filter((player) => !!player.birthDate)
       .map((player) => {
-        const [year, month, day] = (player.birthDate as string).split("-").map(Number);
+        const [year, month, day] = (player.birthDate as string)
+          .split("-")
+          .map(Number);
 
-        const nextBirthday = new Date(
-          today.getFullYear(),
-          month - 1,
-          day
-        );
+        const nextBirthday = new Date(today.getFullYear(), month - 1, day);
 
         if (nextBirthday < today) {
           nextBirthday.setFullYear(today.getFullYear() + 1);
@@ -126,7 +144,7 @@ export default function AgendaPage() {
                     Agenda del equipo
                   </h1>
                   <p className="text-sm text-[var(--muted)] sm:text-base">
-                    Próximas fechas, ausencias y cumpleaños.
+                    Fechas cargadas, ausencias y cumpleaños.
                   </p>
                 </div>
               </div>
@@ -139,51 +157,59 @@ export default function AgendaPage() {
           </div>
         </header>
 
-        <section className="grid gap-4 lg:grid-cols-3">
+        <section className="grid gap-6 lg:grid-cols-[2fr_1fr]">
           <article className="rounded-3xl border border-[var(--border)] bg-[var(--card)] p-5 shadow-sm">
             <h2 className="text-lg font-semibold text-[var(--foreground)]">
-              Próximo partido
+              Partidos cargados
             </h2>
 
-            {nextMatch ? (
-              <div className="mt-4 space-y-2 text-sm text-[var(--muted)]">
-                <p className="font-semibold text-[var(--foreground)]">
-                  Fecha {nextMatch.roundNumber} · Ankara vs {nextMatch.opponent}
-                </p>
-                <p>{nextMatch.matchDate}</p>
-                <p>{nextMatch.matchTime.slice(0, 5)} hs</p>
-                <p>{nextMatch.fieldLabel}</p>
+            {matchesWithAbsences.length > 0 ? (
+              <div className="mt-4 space-y-4">
+                {matchesWithAbsences.map((match) => (
+                  <article
+                    key={match.id}
+                    className="rounded-2xl border border-[var(--border)] bg-[var(--surface-soft)] p-4"
+                  >
+                    <div className="space-y-1 text-sm text-[var(--muted)]">
+                      <p className="font-semibold text-[var(--foreground)]">
+                        Fecha {match.roundNumber} · Ankara vs {match.opponent}
+                      </p>
+                      <p>{match.matchDate}</p>
+                      <p>{match.matchTime.slice(0, 5)} hs</p>
+                      <p>{match.fieldLabel}</p>
+                    </div>
+
+                    <div className="mt-4">
+                      <h3 className="text-sm font-semibold text-[var(--foreground)]">
+                        Ausencias
+                      </h3>
+
+                      {match.absentPlayers.length > 0 ? (
+                        <ul className="mt-2 space-y-2 text-sm text-[var(--muted)]">
+                          {match.absentPlayers.map((player) => (
+                            <li key={player.id}>
+                              • {player.nickname ?? player.name}
+                              {player.reason ? ` — ${player.reason}` : ""}
+                            </li>
+                          ))}
+                        </ul>
+                      ) : (
+                        <p className="mt-2 text-sm text-[var(--muted)]">
+                          No hay ausencias cargadas para este partido.
+                        </p>
+                      )}
+                    </div>
+                  </article>
+                ))}
               </div>
             ) : (
               <p className="mt-4 text-sm text-[var(--muted)]">
-                No hay próximo partido cargado.
+                No hay partidos cargados.
               </p>
             )}
           </article>
 
-          <article className="rounded-3xl border border-[var(--border)] bg-[var(--card)] p-5 shadow-sm">
-            <h2 className="text-lg font-semibold text-[var(--foreground)]">Ausencias</h2>
-
-            {nextMatch ? (
-              absentPlayersForNextMatch.length > 0 ? (
-                <ul className="mt-4 space-y-2 text-sm text-[var(--muted)]">
-                  {absentPlayersForNextMatch.map((player) => (
-                    <li key={player.id}>• {player.nickname ?? player.name}</li>
-                  ))}
-                </ul>
-              ) : (
-                <p className="mt-4 text-sm text-[var(--muted)]">
-                  No hay ausencias cargadas para la próxima fecha.
-                </p>
-              )
-            ) : (
-              <p className="mt-4 text-sm text-[var(--muted)]">
-                Cargá un próximo partido para ver ausencias.
-              </p>
-            )}
-          </article>
-
-          <article className="rounded-3xl border border-[var(--border)] bg-[var(--card)] p-5 shadow-sm">
+          <article className="rounded-3xl border border-[var(--border)] bg-[var(--card)] p-5 shadow-sm h-fit">
             <h2 className="text-lg font-semibold text-[var(--foreground)]">
               Próximos cumpleaños
             </h2>
