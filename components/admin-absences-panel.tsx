@@ -27,8 +27,6 @@ export default function AdminAbsencesPanel({
   const [absences, setAbsences] = useState<PlayerAbsence[]>(initialAbsences);
   const [savingPlayerId, setSavingPlayerId] = useState<number | null>(null);
 
-  const upcomingMatches = matches.filter((match) => match.status === "upcoming");
-
   const selectedMatch = matches.find((match) => String(match.id) === selectedMatchId);
 
   const selectedAbsences = useMemo(() => {
