@@ -32,6 +32,7 @@ type AdminPaymentsPanelProps = {
 
 const getSortableLastName = (fullName: string) => {
   const parts = fullName.trim().split(/\s+/);
+
   return parts.length > 1
     ? parts[parts.length - 1].toLowerCase()
     : fullName.toLowerCase();
@@ -93,11 +94,13 @@ const AdminPaymentsPanel = ({
 
   const collectedProfesorTotal = paymentsState.reduce((total, payment) => {
     if (!payment.paid) return total;
+
     return total + (payment.amountPaid ?? 0);
   }, 0);
 
   const collectedFieldsTotal = fieldPaymentsState.reduce((total, payment) => {
     if (!payment.paid) return total;
+
     return total + (payment.amountPaid ?? 0);
   }, 0);
 
@@ -236,6 +239,7 @@ const AdminPaymentsPanel = ({
 
       const pendingFields = fieldEvents.filter((event) => {
         const payment = getFieldPaymentForPlayer(fieldPaymentsState, player.id, event.id);
+
         return !payment?.paid;
       });
 
@@ -278,11 +282,13 @@ const AdminPaymentsPanel = ({
             value={`$${(profesorCharge?.amount ?? 0).toLocaleString("es-AR")}`}
             variant="default"
           />
+
           <StatCard
             label="Canchas del mes"
             value={`$${totalFields.toLocaleString("es-AR")}`}
             variant="mint"
           />
+
           <StatCard
             label="Total del mes"
             value={`$${totalMonth.toLocaleString("es-AR")}`}
@@ -296,11 +302,13 @@ const AdminPaymentsPanel = ({
             value={`$${expectedTotal.toLocaleString("es-AR")}`}
             variant="default"
           />
+
           <StatCard
             label="Total recaudado"
             value={`$${collectedTotal.toLocaleString("es-AR")}`}
             variant="success"
           />
+
           <StatCard
             label="Pendiente"
             value={`$${pendingTotal.toLocaleString("es-AR")}`}
@@ -314,6 +322,7 @@ const AdminPaymentsPanel = ({
           <h2 className="text-lg font-semibold text-[var(--foreground)] sm:text-xl">
             Jugadoras
           </h2>
+
           <p className="text-sm text-[var(--muted)]">
             Cuota y detalle de canchas por jugadora.
           </p>
@@ -338,35 +347,67 @@ const AdminPaymentsPanel = ({
             return (
               <article
                 key={player.id}
-                className="rounded-3xl border border-[var(--border)] bg-[var(--card)] p-4 shadow-sm transition-all duration-200 hover:-translate-y-0.5"
+                className={`rounded-3xl border p-4 shadow-sm transition-all duration-200 ${
+                  player.active
+                    ? "border-[var(--border)] bg-[var(--card)] hover:-translate-y-0.5"
+                    : "border-[var(--border)] bg-[var(--surface-soft)] opacity-60 saturate-50"
+                }`}
               >
                 <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
                   <div className="min-w-0">
                     <h3 className="text-base font-semibold text-[var(--foreground)] sm:text-lg">
                       {player.name}
                     </h3>
-                    <p className="text-sm text-[var(--muted)]">
-                      Zurdo: {profesorPayment?.paid ? "Pago" : "Pendiente"} · Canchas:{" "}
-                      {paidFieldsCount}/{totalFieldEvents}
-                    </p>
+
+                    <div className="mt-1 flex flex-wrap items-center gap-2 text-sm text-[var(--muted)]">
+                      <span>
+                        Zurdo:{" "}
+                        {player.active
+                          ? profesorPayment?.paid
+                            ? "Pago"
+                            : "Pendiente"
+                          : "Inactiva"}
+                      </span>
+
+                      <span>·</span>
+
+                      <span>
+                        Canchas:{" "}
+                        {player.active
+                          ? `${paidFieldsCount}/${totalFieldEvents}`
+                          : "Inactiva"}
+                      </span>
+
+                      {!player.active && (
+                        <span className="inline-flex rounded-full bg-red-600 px-3 py-1 text-xs font-semibold text-white">
+                          Inactiva
+                        </span>
+                      )}
+                    </div>
                   </div>
 
                   <button
                     type="button"
+                    disabled={!player.active}
                     onClick={() => togglePlayerExpanded(player.id)}
-                    className="inline-flex w-full items-center justify-center rounded-xl border border-[var(--border)] bg-[var(--card)] px-4 py-2 text-sm font-medium text-[var(--foreground)] transition hover:border-[var(--ankara-mint)] hover:bg-[var(--surface-mint)] md:w-auto"
+                    className="inline-flex w-full items-center justify-center rounded-xl border border-[var(--border)] bg-[var(--card)] px-4 py-2 text-sm font-medium text-[var(--foreground)] transition hover:border-[var(--ankara-mint)] hover:bg-[var(--surface-mint)] disabled:cursor-not-allowed disabled:opacity-50 md:w-auto"
                   >
-                    {isExpanded ? "Ocultar detalle" : "Ver detalle"}
+                    {player.active
+                      ? isExpanded
+                        ? "Ocultar detalle"
+                        : "Ver detalle"
+                      : "Inactiva"}
                   </button>
                 </div>
 
-                {isExpanded && (
+                {player.active && isExpanded && (
                   <div className="mt-4 grid gap-4 xl:grid-cols-2">
                     <div className="rounded-2xl border border-[var(--border)] bg-[var(--card)] p-4">
                       <div className="flex items-center justify-between gap-3">
                         <span className="text-sm font-semibold text-[var(--foreground)]">
                           Zurdo
                         </span>
+
                         <PaymentStatusBadge paid={profesorPayment?.paid ?? false} />
                       </div>
 
@@ -396,6 +437,7 @@ const AdminPaymentsPanel = ({
                         <span className="text-sm font-semibold text-[var(--foreground)]">
                           Canchas
                         </span>
+
                         <span className="inline-flex w-fit rounded-full bg-[var(--surface-blue)] px-3 py-1 text-xs font-semibold text-[var(--ankara-blue)] dark:text-[var(--ankara-mint)]">
                           {paidFieldsCount}/{totalFieldEvents} pagadas
                         </span>
@@ -421,6 +463,7 @@ const AdminPaymentsPanel = ({
                                   <p className="text-sm font-semibold text-[var(--foreground)]">
                                     {event.label}
                                   </p>
+
                                   <p className="text-xs text-[var(--muted)]">
                                     {event.eventDate} · $
                                     {event.amount.toLocaleString("es-AR")}
@@ -522,6 +565,7 @@ const ActionButton = ({
       </button>
 
       {saved && <p className="text-sm font-medium text-green-600">Guardado</p>}
+
       {error && <p className="text-sm font-medium text-red-600">Error al guardar</p>}
     </div>
   );
