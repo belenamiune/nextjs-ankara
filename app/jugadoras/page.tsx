@@ -162,8 +162,12 @@ export default function JugadorasPage() {
       return !payment?.paid;
     });
 
-    const fieldDebt = unpaidFieldEvents.reduce((total, event) => total + event.amount, 0);
-    const profesorDebt = profesorPayment?.paid ? 0 : (profesorCharge?.amount ?? 0);
+    const fieldDebt = player.active
+      ? unpaidFieldEvents.reduce((total, event) => total + event.amount, 0)
+      : 0;
+
+    const profesorDebt =
+      player.active && !profesorPayment?.paid ? (profesorCharge?.amount ?? 0) : 0;
 
     return {
       id: player.id,
@@ -208,18 +212,14 @@ export default function JugadorasPage() {
   );
 
   const nextBirthdayPlayer = (() => {
-  const today = new Date();
+    const today = new Date();
 
-  const playersWithBirthday = activePlayers
+    const playersWithBirthday = activePlayers
       .filter((player) => !!player.birthDate)
       .map((player) => {
         const [year, month, day] = String(player.birthDate).split("-").map(Number);
 
-        const nextBirthday = new Date(
-          today.getFullYear(),
-          month - 1,
-          day
-        );
+        const nextBirthday = new Date(today.getFullYear(), month - 1, day);
 
         if (nextBirthday < today) {
           nextBirthday.setFullYear(today.getFullYear() + 1);
@@ -342,11 +342,18 @@ export default function JugadorasPage() {
                 </p>
                 <p>
                   <span className="font-medium text-[var(--foreground)]">Zurdo:</span>{" "}
-                  {player.profesorPaid ? "Pago" : "Pendiente"}
+                  {player.active
+                    ? player.profesorPaid
+                      ? "Pago"
+                      : "Pendiente"
+                    : "Inactiva"}
                 </p>
+
                 <p>
                   <span className="font-medium text-[var(--foreground)]">Canchas:</span>{" "}
-                  {player.fieldPaidCount}/{player.totalFieldCount} pagadas
+                  {player.active
+                    ? `${player.fieldPaidCount}/${player.totalFieldCount} pagadas`
+                    : "Inactiva"}
                 </p>
               </div>
 

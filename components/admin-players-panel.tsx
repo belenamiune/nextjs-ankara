@@ -32,6 +32,33 @@ const emptyForm: FormState = {
   active: true,
 };
 
+const getSortableLastName = (fullName: string) => {
+  const parts = fullName.trim().split(/\s+/);
+
+  return parts.length > 1
+    ? parts[parts.length - 1].toLowerCase()
+    : fullName.toLowerCase();
+};
+
+const sortPlayersByLastName = (players: AdminPlayer[]) => {
+  return [...players].sort((a, b) => {
+    const lastNameA = getSortableLastName(a.name);
+    const lastNameB = getSortableLastName(b.name);
+
+    const compareLastName = lastNameA.localeCompare(lastNameB, "es", {
+      sensitivity: "base",
+    });
+
+    if (compareLastName !== 0) {
+      return compareLastName;
+    }
+
+    return a.name.localeCompare(b.name, "es", {
+      sensitivity: "base",
+    });
+  });
+};
+
 export default function AdminPlayersPanel({ initialPlayers }: AdminPlayersPanelProps) {
   const [players, setPlayers] = useState<AdminPlayer[]>(initialPlayers);
   const [editingPlayerId, setEditingPlayerId] = useState<number | null>(null);
@@ -40,9 +67,7 @@ export default function AdminPlayersPanel({ initialPlayers }: AdminPlayersPanelP
   const [feedback, setFeedback] = useState<"success" | "error" | null>(null);
   const [toggleLoadingId, setToggleLoadingId] = useState<number | null>(null);
 
-  const sortedPlayers = useMemo(() => {
-    return [...players].sort((a, b) => a.id - b.id);
-  }, [players]);
+  const sortedPlayers = useMemo(() => sortPlayersByLastName(players), [players]);
 
   const handleChange = (field: keyof FormState, value: string | boolean) => {
     setForm((prev) => ({

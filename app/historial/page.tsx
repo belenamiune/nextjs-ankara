@@ -42,6 +42,7 @@ type PlayerMonthSummary = {
   totalFieldCount: number;
   fieldDebt: number;
   totalDebt: number;
+  active: boolean;
 };
 
 export default function HistorialPage() {
@@ -163,9 +164,10 @@ export default function HistorialPage() {
   const profesorCharge = getChargeByCode(monthCharges, "profesor");
   const totalFieldsAmount = fieldEvents.reduce((sum, event) => sum + event.amount, 0);
   const totalFieldCount = fieldEvents.length;
+
   const activePlayers = players.filter((player) => player.active);
 
-  const playerSummaries: PlayerMonthSummary[] = activePlayers.map((player) => {
+  const playerSummaries: PlayerMonthSummary[] = players.map((player) => {
     const profesorPayment = getPaymentForPlayerAndCharge(
       payments,
       player.id,
@@ -188,13 +190,18 @@ export default function HistorialPage() {
       return !payment?.paid;
     });
 
-    const fieldDebt = unpaidFieldEvents.reduce((total, event) => total + event.amount, 0);
-    const profesorDebt = profesorPayment?.paid ? 0 : (profesorCharge?.amount ?? 0);
+    const profesorDebt =
+      player.active && !profesorPayment?.paid ? (profesorCharge?.amount ?? 0) : 0;
+
+    const fieldDebt = player.active
+      ? unpaidFieldEvents.reduce((total, event) => total + event.amount, 0)
+      : 0;
 
     return {
       id: player.id,
       name: player.name,
       nickname: player.nickname,
+      active: player.active,
       profesorPaid: profesorPayment?.paid ?? false,
       profesorDebt,
       fieldPaidCount: paidFieldPayments.length,
@@ -301,83 +308,95 @@ export default function HistorialPage() {
           </label>
         </section>
 
-{!selectedMonth ? (
-  <section className="rounded-3xl border border-[var(--border)] bg-[var(--card)] p-8 shadow-sm">
-    <p className="text-sm text-[var(--muted)]">No hay mes seleccionado.</p>
-  </section>
-) : monthLoading ? (
-  <section className="rounded-3xl border border-[var(--border)] bg-[var(--card)] p-8 shadow-sm">
-    <div className="flex min-h-[220px] flex-col items-center justify-center gap-4">
-      <div className="h-10 w-10 animate-spin rounded-full border-4 border-[var(--border)] border-t-[var(--ankara-blue)]" />
-      <p className="text-sm text-[var(--muted)]">Cargando información del mes...</p>
-    </div>
-  </section>
-) : (
-  <>
-    <section className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-      <SummaryCard label="Mes" value={selectedMonth.label} />
-      <SummaryCard
-        label="Total esperado"
-        value={`$${expectedTotal.toLocaleString("es-AR")}`}
-      />
-      <SummaryCard
-        label="Recaudado"
-        value={`$${collectedTotal.toLocaleString("es-AR")}`}
-      />
-      <SummaryCard
-        label="Pendiente"
-        value={`$${pendingTotal.toLocaleString("es-AR")}`}
-        highlight
-      />
-    </section>
+        {!selectedMonth ? (
+          <section className="rounded-3xl border border-[var(--border)] bg-[var(--card)] p-8 shadow-sm">
+            <p className="text-sm text-[var(--muted)]">No hay mes seleccionado.</p>
+          </section>
+        ) : monthLoading ? (
+          <section className="rounded-3xl border border-[var(--border)] bg-[var(--card)] p-8 shadow-sm">
+            <div className="flex min-h-[220px] flex-col items-center justify-center gap-4">
+              <div className="h-10 w-10 animate-spin rounded-full border-4 border-[var(--border)] border-t-[var(--ankara-blue)]" />
+              <p className="text-sm text-[var(--muted)]">
+                Cargando información del mes...
+              </p>
+            </div>
+          </section>
+        ) : (
+          <>
+            <section className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+              <SummaryCard label="Mes" value={selectedMonth.label} />
+              <SummaryCard
+                label="Total esperado"
+                value={`$${expectedTotal.toLocaleString("es-AR")}`}
+              />
+              <SummaryCard
+                label="Recaudado"
+                value={`$${collectedTotal.toLocaleString("es-AR")}`}
+              />
+              <SummaryCard
+                label="Pendiente"
+                value={`$${pendingTotal.toLocaleString("es-AR")}`}
+                highlight
+              />
+            </section>
 
-      <section className="rounded-3xl border border-[var(--border)] bg-[var(--card)] p-4 shadow-sm sm:p-5">
-        <div className="mb-4 flex flex-col gap-1">
-          <h2 className="text-lg font-semibold text-[var(--foreground)] sm:text-xl">
-            Detalle por jugadora
-          </h2>
-          <p className="text-sm text-[var(--muted)]">
-            Estado financiero de {selectedMonth.label}.
-          </p>
-        </div>
-
-        <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
-          {sortedPlayerSummaries.map((player) => (
-            <article
-              key={player.id}
-              className="rounded-3xl border border-[var(--border)] bg-[var(--card)] p-5 shadow-sm"
-            >
-              <h3 className="text-lg font-semibold text-[var(--foreground)]">
-                {player.nickname ?? player.name}
-              </h3>
-              <p className="text-sm text-[var(--muted)]">{player.name}</p>
-
-              <div className="mt-4 space-y-2 text-sm text-[var(--muted)]">
-                <p>
-                  <span className="font-medium text-[var(--foreground)]">
-                    Zurdo:
-                  </span>{" "}
-                  {player.profesorPaid ? "Pago" : "Pendiente"}
-                </p>
-                <p>
-                  <span className="font-medium text-[var(--foreground)]">
-                    Canchas:
-                  </span>{" "}
-                  {player.fieldPaidCount}/{player.totalFieldCount} pagadas
+            <section className="rounded-3xl border border-[var(--border)] bg-[var(--card)] p-4 shadow-sm sm:p-5">
+              <div className="mb-4 flex flex-col gap-1">
+                <h2 className="text-lg font-semibold text-[var(--foreground)] sm:text-xl">
+                  Detalle por jugadora
+                </h2>
+                <p className="text-sm text-[var(--muted)]">
+                  Estado financiero de {selectedMonth.label}.
                 </p>
               </div>
 
-              <div className="mt-5 grid gap-3 sm:grid-cols-3">
-                <DebtCard label="Debe Zurdo" amount={player.profesorDebt} />
-                <DebtCard label="Debe canchas" amount={player.fieldDebt} />
-                <DebtCard label="Debe total" amount={player.totalDebt} highlight />
+              <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+                {sortedPlayerSummaries.map((player) => (
+                  <article
+                    key={player.id}
+                    className="rounded-3xl border border-[var(--border)] bg-[var(--card)] p-5 shadow-sm"
+                  >
+                    <div className="flex items-start justify-between gap-3">
+                    <div className="min-w-0">
+                      <h3 className="truncate text-lg font-semibold text-[var(--foreground)]">
+                        {player.nickname ?? player.name}
+                      </h3> 
+                      <p className="truncate text-sm text-[var(--muted)]">{player.name}</p>
+                    </div>
+
+                    {!player.active && (
+                      <span className="inline-flex w-fit shrink-0 rounded-full bg-[rgba(239,68,68,0.12)] text-red-700 dark:text-red-400 px-3 py-1 text-xs font-semibold ">
+                        Inactiva
+                      </span>
+                    )}
+                  </div>
+
+                    <div className="mt-4 space-y-2 text-sm text-[var(--muted)]">
+                      <p>
+                        <span className="font-medium text-[var(--foreground)]">
+                          Zurdo:
+                        </span>{" "}
+                        {player.active ? (player.profesorPaid ? "Pago" : "Pendiente") : "Inactiva"}
+                      </p>
+                      <p>
+                        <span className="font-medium text-[var(--foreground)]">
+                          Canchas:
+                        </span>{" "}
+                        {player.active ? `${player.fieldPaidCount}/${player.totalFieldCount} pagadas` : "Inactiva"}
+                      </p>
+                    </div>
+
+                    <div className="mt-5 grid gap-3 sm:grid-cols-3">
+                      <DebtCard label="Debe Zurdo" amount={player.profesorDebt} />
+                      <DebtCard label="Debe canchas" amount={player.fieldDebt} />
+                      <DebtCard label="Debe total" amount={player.totalDebt} highlight />
+                    </div>
+                  </article>
+                ))}
               </div>
-            </article>
-          ))}
-        </div>
-      </section>
-    </>
-  )}
+            </section>
+          </>
+        )}
       </div>
     </main>
   );

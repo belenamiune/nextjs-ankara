@@ -10,19 +10,47 @@ type AdminAbsencesPanelProps = {
   initialAbsences: PlayerAbsence[];
 };
 
+const getSortableLastName = (fullName: string) => {
+  const parts = fullName.trim().split(/\s+/);
+
+  return parts.length > 1
+    ? parts[parts.length - 1].toLowerCase()
+    : fullName.toLowerCase();
+};
+
+const sortPlayersByLastName = (players: AgendaPlayer[]) => {
+  return [...players].sort((a, b) => {
+    const lastNameA = getSortableLastName(a.name);
+    const lastNameB = getSortableLastName(b.name);
+
+    const compareLastName = lastNameA.localeCompare(lastNameB, "es", {
+      sensitivity: "base",
+    });
+
+    if (compareLastName !== 0) {
+      return compareLastName;
+    }
+
+    return a.name.localeCompare(b.name, "es", {
+      sensitivity: "base",
+    });
+  });
+};
+
 export default function AdminAbsencesPanel({
   players,
   matches,
   initialAbsences,
 }: AdminAbsencesPanelProps) {
-    const sortedMatches = useMemo(() => {
-      return [...matches].sort((a, b) => a.roundNumber - b.roundNumber);
-    }, [matches]);
+  const sortedMatches = useMemo(() => {
+    return [...matches].sort((a, b) => a.roundNumber - b.roundNumber);
+  }, [matches]);
 
-    const [selectedMatchId, setSelectedMatchId] = useState<string>(
-      sortedMatches[0]?.id?.toString() ?? ""
-    );
+  const sortedPlayers = useMemo(() => sortPlayersByLastName(players), [players]);
 
+  const [selectedMatchId, setSelectedMatchId] = useState<string>(
+    sortedMatches[0]?.id?.toString() ?? ""
+  );
 
   const [absences, setAbsences] = useState<PlayerAbsence[]>(initialAbsences);
   const [savingPlayerId, setSavingPlayerId] = useState<number | null>(null);
@@ -107,24 +135,25 @@ export default function AdminAbsencesPanel({
           <span className="text-sm font-medium text-[var(--foreground)]">Partido</span>
 
           <select
-              value={selectedMatchId}
-              onChange={(event) => setSelectedMatchId(event.target.value)}
-              className="h-11 w-full min-w-0 max-w-full rounded-xl border border-[var(--border)] bg-[var(--background)] px-3 text-sm text-[var(--foreground)] outline-none transition focus:border-[var(--ankara-mint)]"
-            >
-              {sortedMatches.map((match) => (
-                <option key={match.id} value={match.id}>
-                  Fecha {match.roundNumber} · {match.opponent} · {match.matchDate} ·{" "}
-                  {match.status === "played" ? "Jugado" : "Próximo"}
-                </option>))}
-            </select>
+            value={selectedMatchId}
+            onChange={(event) => setSelectedMatchId(event.target.value)}
+            className="h-11 w-full min-w-0 max-w-full rounded-xl border border-[var(--border)] bg-[var(--background)] px-3 text-sm text-[var(--foreground)] outline-none transition focus:border-[var(--ankara-mint)]"
+          >
+            {sortedMatches.map((match) => (
+              <option key={match.id} value={match.id}>
+                Fecha {match.roundNumber} · {match.opponent} · {match.matchDate} ·{" "}
+                {match.status === "played" ? "Jugado" : "Próximo"}
+              </option>
+            ))}
+          </select>
         </label>
 
         <div className="grid min-w-0 gap-3 sm:grid-cols-2 xl:grid-cols-3">
-          {players.map((player) => {
+          {sortedPlayers.map((player) => {
             const absent = isPlayerAbsent(player.id);
 
             return (
-             <article
+              <article
                 key={player.id}
                 className="min-w-0 rounded-2xl border border-[var(--border)] bg-[var(--surface-soft)] p-4"
               >

@@ -237,7 +237,7 @@ export default function Home() {
             </div>
 
             <div className="divide-y divide-[var(--border)]">
-              {sortedPlayers.map((player) => {
+              {sortedPlayers.map((player, index) => {
                 const profesorPayment = getPaymentForPlayerAndCharge(
                   payments,
                   player.id,
@@ -257,7 +257,7 @@ export default function Home() {
                   >
                     <div>
                       <p className="text-sm font-semibold text-[var(--foreground)] sm:text-base">
-                        {player.name}
+                        {index + 1}. {player.name}
                       </p>
                     </div>
 
@@ -265,7 +265,13 @@ export default function Home() {
                       <span className="text-xs font-medium uppercase tracking-[0.08em] text-[var(--muted)] md:hidden">
                         Zurdo
                       </span>
-                      <PaymentStatusBadge paid={profesorPayment?.paid ?? false} />
+                      {player.active ? (
+                        <PaymentStatusBadge paid={profesorPayment?.paid ?? false} />
+                      ) : (
+                        <span className="inline-flex w-fit rounded-full bg-[rgba(239,68,68,0.12)] text-red-700 dark:text-red-400 px-3 py-1 text-xs font-semibold">
+                          Inactiva
+                        </span>
+                      )}
                     </div>
 
                     <div className="flex items-center justify-between gap-3 md:justify-start">
@@ -273,9 +279,15 @@ export default function Home() {
                         Canchas
                       </span>
 
-                      <span className="inline-flex w-fit rounded-full bg-[var(--surface-blue)] px-3 py-1 text-xs font-semibold text-[var(--ankara-blue)] dark:text-[var(--ankara-mint)]">
-                        {paidFieldsCount}/{totalFieldEvents} pagadas
-                      </span>
+                    {player.active ? (
+                        <span className="inline-flex w-fit rounded-full bg-[var(--surface-blue)] px-3 py-1 text-xs font-semibold text-[var(--ankara-blue)] dark:text-[var(--ankara-mint)]">
+                          {paidFieldsCount}/{totalFieldEvents} pagadas
+                        </span>
+                      ) : (
+                        <span className="inline-flex w-fit rounded-full bg-[rgba(239,68,68,0.12)] text-red-700 dark:text-red-400 px-3 py-1 text-xs font-semibold">
+                          Inactiva
+                        </span>
+                      )}
                     </div>
                   </article>
                 );
