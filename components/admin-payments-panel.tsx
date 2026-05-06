@@ -120,9 +120,51 @@ const AdminPaymentsPanel = ({
         payment.playerId === playerId && payment.monthChargeId === monthChargeId
     );
 
-    if (!currentPayment || !profesorCharge) {
+    if (!profesorCharge) {
       setSavingKey(null);
       setErrorKey(key);
+      return;
+    }
+
+    if (!currentPayment) {
+      const { data, error } = await supabase
+        .from("payments")
+        .insert({
+          player_id: playerId,
+          month_charge_id: monthChargeId,
+          paid: true,
+          paid_at: new Date().toISOString().split("T")[0],
+          amount_paid: profesorCharge.amount,
+        })
+        .select("*")
+        .single();
+
+      if (error || !data) {
+        console.error(error);
+        setSavingKey(null);
+        setErrorKey(key);
+        return;
+      }
+
+      setPaymentsState((prev) => [
+        ...prev,
+        {
+          id: data.id,
+          playerId: data.player_id,
+          monthChargeId: data.month_charge_id,
+          paid: data.paid,
+          paidAt: data.paid_at ?? undefined,
+          amountPaid: data.amount_paid ?? undefined,
+        },
+      ]);
+
+      setSavingKey(null);
+      setFeedbackKey(key);
+
+      setTimeout(() => {
+        setFeedbackKey((current) => (current === key ? null : current));
+      }, 2000);
+
       return;
     }
 
@@ -136,10 +178,10 @@ const AdminPaymentsPanel = ({
         amount_paid: nextPaid ? profesorCharge.amount : null,
       })
       .eq("id", currentPayment.id)
-      .select()
+      .select("*")
       .single();
 
-    if (error) {
+    if (error || !data) {
       console.error(error);
       setSavingKey(null);
       setErrorKey(key);
@@ -181,9 +223,51 @@ const AdminPaymentsPanel = ({
 
     const currentEvent = fieldEvents.find((event) => event.id === fieldEventId);
 
-    if (!currentPayment || !currentEvent) {
+    if (!currentEvent) {
       setSavingKey(null);
       setErrorKey(key);
+      return;
+    }
+
+    if (!currentPayment) {
+      const { data, error } = await supabase
+        .from("field_payments")
+        .insert({
+          player_id: playerId,
+          field_event_id: fieldEventId,
+          paid: true,
+          paid_at: new Date().toISOString().split("T")[0],
+          amount_paid: currentEvent.amount,
+        })
+        .select("*")
+        .single();
+
+      if (error || !data) {
+        console.error(error);
+        setSavingKey(null);
+        setErrorKey(key);
+        return;
+      }
+
+      setFieldPaymentsState((prev) => [
+        ...prev,
+        {
+          id: data.id,
+          playerId: data.player_id,
+          fieldEventId: data.field_event_id,
+          paid: data.paid,
+          paidAt: data.paid_at ?? undefined,
+          amountPaid: data.amount_paid ?? undefined,
+        },
+      ]);
+
+      setSavingKey(null);
+      setFeedbackKey(key);
+
+      setTimeout(() => {
+        setFeedbackKey((current) => (current === key ? null : current));
+      }, 2000);
+
       return;
     }
 
@@ -197,10 +281,10 @@ const AdminPaymentsPanel = ({
         amount_paid: nextPaid ? currentEvent.amount : null,
       })
       .eq("id", currentPayment.id)
-      .select()
+      .select("*")
       .single();
 
-    if (error) {
+    if (error || !data) {
       console.error(error);
       setSavingKey(null);
       setErrorKey(key);
